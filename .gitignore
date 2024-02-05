@@ -1,0 +1,33 @@
+# Images
+*.png
+
+# Builds
+*.egg-info
+
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Docs
+build/
+doc/_build/
+
+# Data
+*.npy
+*.npz
+
+# Notebooks
+*.ipynb
+.ipynb_checkpoints/
+
+# slurm/sbatch files
+*.e *.o
+*.slurm
+
+# vscode
+.vscode
+
+# distribtion
+dist/
+_version.py

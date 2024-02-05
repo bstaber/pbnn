@@ -239,8 +239,8 @@ def gramacy_function(x: Array, noise: Array) -> Array:
     idx_1 = x[:, 0] <= 9.6
     idx_2 = x[:, 0] > 9.6
     f = jnp.zeros_like(x)
-    f[idx_1] = jnp.sin(jnp.pi * x / 5.0) + (1.0 / 5.0) * jnp.cos(4.0 * jnp.pi * x / 5.0)
-    f[idx_2] = x[idx_2] / 10.0 - 1.0
+    f = f.at[idx_1].set(jnp.sin(jnp.pi * x / 5.0) + (1.0 / 5.0) * jnp.cos(4.0 * jnp.pi * x / 5.0))
+    f = f.at[idx_2].set(x[idx_2] / 10.0 - 1.0)
     y = f + noise
     return y
 
