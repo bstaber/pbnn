@@ -5,7 +5,7 @@ from jax.flatten_util import ravel_pytree
 from flax import linen as nn
 
 
-def trigonometric_function1(x: Array, noise: Array) -> Array:
+def trigonometric_function(x: Array, noise: Array) -> Array:
     r"""Simple trigonometric function of the form:
 
     .. math::
@@ -57,19 +57,19 @@ def trigonometric_function1(x: Array, noise: Array) -> Array:
     return jnp.cos(2.0 * x) + jnp.sin(x) + noise
 
 
-def trigonometric_function2(x: Array, noise: Array) -> Array:
+def heteroscedastic_trigonometric_function(x: Array, noise: Array) -> Array:
     r"""Simple trigonometric function of the form:
 
     .. math::
 
-        y(x) = 2*\sin(2*x) + \pi*x + \epsilon(x)
+        y(x) = 2*\sin(2*\beta^T x) + \pi*\beta^2 x + \sqrt{1.0 + (\beta^T x)^2}
 
-    where :math:`\epsilon` is the additive noise.
+    where :math:`\epsilon` is a Gaussian random variable.
 
     Parameters
     ~~~~~~~~~~
     x
-        Input array of size (n, 1)
+        Input array of size (n, d)
     noise
         Noise array of size (n, 1)
 
@@ -107,14 +107,19 @@ def trigonometric_function2(x: Array, noise: Array) -> Array:
         Values of the function evaluated at the given inputs
     """
 
-    return jnp.cos(2.0 * x) + jnp.pi * x + noise
+    dim = x.shape[-1]
+    beta = jnp.zeros((dim,))
+    beta = beta.at[0:5].set(1.0)
+    z = jnp.dot(x, beta)[:, None]
+    y = jnp.cos(2.0 * z) + jnp.pi * z + jnp.sqrt(1.0 + z**2) * noise
+    return y
 
 
 def mlp_function(x: Array, params_rng_key: Array, noise: Array) -> Array:
-    r"""Regression function generated from a MLP network 
+    r"""Regression function generated from a MLP network
     with parameters drawn from a normal distribution.
 
-    Given an input :math:`x`, we first build the features :math:`z_1 = x_1` 
+    Given an input :math:`x`, we first build the features :math:`z_1 = x_1`
     and :math:`z_2`, and the output computed as follows:
 
     .. math::
@@ -138,7 +143,7 @@ def mlp_function(x: Array, params_rng_key: Array, noise: Array) -> Array:
     y
         Values of the function evaluated at the given inputs
     """
-    
+
     class MLP_relu(nn.Module):
         """Simple MLP."""
 
@@ -198,7 +203,7 @@ def ishigami_function(x: Array, noise: Array, a: int = 7, b: int = 0.1) -> Array
     Parameters
     ~~~~~~~~~~
     x
-        Input array of size (n, 1)
+        Input array of size (n, 3)
     noise
         Noise array of size (n, 1)
     a
@@ -239,7 +244,10 @@ def gramacy_function(x: Array, noise: Array) -> Array:
     idx_1 = x[:, 0] <= 9.6
     idx_2 = x[:, 0] > 9.6
     f = jnp.zeros_like(x)
-    f = f.at[idx_1].set(jnp.sin(jnp.pi * x / 5.0) + (1.0 / 5.0) * jnp.cos(4.0 * jnp.pi * x / 5.0))
+    f = f.at[idx_1].set(
+        jnp.sin(jnp.pi * x[idx_1] / 5.0)
+        + (1.0 / 5.0) * jnp.cos(4.0 * jnp.pi * x[idx_1] / 5.0)
+    )
     f = f.at[idx_2].set(x[idx_2] / 10.0 - 1.0)
     y = f + noise
     return y
@@ -272,6 +280,6 @@ def g_function(x: Array, noise: Array) -> Array:
     """
     d = x.shape[1]
     a = (jnp.arange(d) + 1 - 2.0) / 2.0
-    f = (jnp.abs(4.0 * x - 1.0) + a[:, None]) / (1.0 + a[:, None])
+    f = jnp.prod((jnp.abs(4.0 * x - 1.0) + a[None]) / (1.0 + a[None]), axis=1)
     y = f + noise
     return y
