@@ -111,7 +111,7 @@ def heteroscedastic_trigonometric_function(x: Array, noise: Array) -> Array:
     beta = jnp.zeros((dim,))
     beta = beta.at[0:5].set(1.0)
     z = jnp.dot(x, beta)[:, None]
-    y = jnp.cos(2.0 * z) + jnp.pi * z + jnp.sqrt(1.0 + z**2) * noise
+    y = 2.0*jnp.sin(jnp.pi*z) + jnp.pi*z + jnp.sqrt(1.0 + z**2) * noise
     return y
 
 
