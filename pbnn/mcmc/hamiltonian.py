@@ -1,17 +1,75 @@
-import jax
-import jax.numpy as jnp
-import blackjax
-import kernels
-from jax import Array
-
-from jax.flatten_util import ravel_pytree
-from pbnn.mcmc.sgmcmc.gradients import cv_grad_estimator
-from blackjax.gradient import grad_estimator
-from pbnn.utils.data import batch_data
 from typing import Callable
 
+import blackjax
+import jax
+import jax.numpy as jnp
+import kernels
+from blackjax.gradient import grad_estimator
+from jax import Array
+from jax.flatten_util import ravel_pytree
 
-def SGLD(
+from pbnn.mcmc.sgmcmc.gradients import cv_grad_estimator
+from pbnn.utils.data import batch_data
+
+
+def inference_loop(rng_key, step_fn, initial_state, num_samples):
+    """Inference loop with lax.scan"""
+
+    @jax.jit
+    def one_step(state, rng_key):
+        state, info = step_fn(rng_key, state)
+        return state, (info, state)
+
+    keys = jax.random.split(rng_key, num_samples)
+    _, (infos, states) = jax.lax.scan(one_step, initial_state, keys)
+    return infos, states
+
+
+def hmc(
+    logprob_fn: Callable,
+    init_positions: Array,
+    num_samples: int,
+    step_size: float,
+    inverse_mass_matrix: Array,
+    num_integration_steps: int,
+    rng_key: Array,
+):
+    """Wrapper of the HMC algorithm implemented in BlackJAX.
+
+    Parameters
+    ----------
+
+    logprob_fn
+        Callable function that returns the log-probability of the target
+    init_positions
+        Initial guess for the HMC algorithm
+    num_samples
+        Number of iterations (burn-in included)
+    step_size
+        Value of the step size
+    inverse_mass_matrix
+        Flattened inverse mass matrix
+    num_integration_steps
+        Number of integration steps
+    rng_key
+        A JAX PRNGKey.
+
+    Returns
+    -------
+
+    A tuple of states and informations
+    """
+
+    kern = blackjax.hmc(
+        logprob_fn, step_size, inverse_mass_matrix, num_integration_steps
+    )
+    step_fn = jax.jit(kern.step)
+    init_state = kern.init(init_positions)
+    infos, states = inference_loop(rng_key, step_fn, init_state, num_samples)
+    return infos, states
+
+
+def sghmc(
     X: Array,
     y: Array,
     loglikelihood_fn: Callable,
@@ -20,21 +78,23 @@ def SGLD(
     batch_size: int,
     step_size: float,
     num_iterations: int,
+    num_integration_steps: int,
     rng_key: Array,
 ):
     # batch data
     data_size = len(X)
     batches = batch_data(rng_key, (X, y), batch_size, data_size, replace=True)
 
-    # sgld functions
+    # sghmc functions
     grad_fn = grad_estimator(logprior_fn, loglikelihood_fn, data_size)
-    kern = blackjax.sgld(grad_fn)
+
+    kern = blackjax.sghmc(grad_fn, num_integration_steps)
     step_fn = jax.jit(kern.step)
 
     # get initial state
     init_state = kern.init(init_positions, next(batches))
 
-    # apply SGLD with lax.scan
+    # apply SGHMC with lax.scan
     @jax.jit
     def one_step(state, rng_key):
         batch = next(batches)
@@ -47,50 +107,13 @@ def SGLD(
     def ravel_fn(pytree):
         return jax.vmap(lambda tree: ravel_pytree(tree)[0])(pytree)
 
-    return positions, ravel_fn
+    def predict_fn(network, params, X_test):
+        return jax.vmap(lambda p: network().apply({"params": p}, X_test), 0)(params)
+
+    return positions, ravel_fn, predict_fn
 
 
-def pSGLD(
-    X: Array,
-    y: Array,
-    loglikelihood_fn: Callable,
-    logprior_fn: Callable,
-    init_positions: Array,
-    batch_size: int,
-    step_size: float,
-    num_iterations: int,
-    preconditioning_factor: float,
-    rng_key: Array,
-):
-    # batch data
-    data_size = len(X)
-    batches = batch_data(rng_key, (X, y), batch_size, data_size, replace=True)
-
-    # sgld functions
-    grad_fn = grad_estimator(logprior_fn, loglikelihood_fn, data_size)
-    kern = kernels.psgld(grad_fn, preconditioning_factor)
-    step_fn = jax.jit(kern.step)
-
-    # get initial state
-    init_state = kern.init(init_positions, next(batches))
-
-    # apply SGLD with lax.scan
-    @jax.jit
-    def one_step(state, rng_key):
-        batch = next(batches)
-        new_state = step_fn(rng_key, state, batch, step_size)
-        return new_state, new_state
-
-    keys = jax.random.split(rng_key, num_iterations)
-    _, positions = jax.lax.scan(one_step, init_state, keys)
-
-    def ravel_fn(pytree):
-        return jax.vmap(lambda tree: ravel_pytree(tree)[0])(pytree)
-
-    return positions, ravel_fn
-
-
-def AdaptiveSGLD(
+def adaptive_sghmc(
     X: Array,
     y: Array,
     loglikelihood_fn: Callable,
@@ -99,21 +122,23 @@ def AdaptiveSGLD(
     batch_size: int,
     schedule_fn: Callable,
     num_iterations: int,
+    num_integration_steps: int,
     rng_key: Array,
 ):
     # batch data
     data_size = len(X)
     batches = batch_data(rng_key, (X, y), batch_size, data_size, replace=True)
 
-    # sgld functions
+    # sghmc functions
     grad_fn = grad_estimator(logprior_fn, loglikelihood_fn, data_size)
-    kern = blackjax.sgld(grad_fn)
+
+    kern = blackjax.sghmc(grad_fn, num_integration_steps)
     step_fn = jax.jit(kern.step)
 
     # get initial state
     init_state = kern.init(init_positions, next(batches))
 
-    # apply SGLD with lax.scan
+    # apply SGHMC with lax.scan
     @jax.jit
     def one_step(state, rng_key):
         batch = next(batches)
@@ -127,10 +152,13 @@ def AdaptiveSGLD(
     def ravel_fn(pytree):
         return jax.vmap(lambda tree: ravel_pytree(tree)[0])(pytree)
 
-    return positions, ravel_fn
+    def predict_fn(network, params, X_test):
+        return jax.vmap(lambda p: network().apply({"params": p}, X_test), 0)(params)
+
+    return positions, ravel_fn, predict_fn
 
 
-def SGLDCV(
+def sghmc_cv(
     X: Array,
     y: Array,
     loglikelihood_fn: Callable,
@@ -140,23 +168,25 @@ def SGLDCV(
     step_size: float,
     num_iterations: int,
     centering_positions: Array,
-    rng_key: Array
+    num_integration_steps: int,
+    rng_key: Array,
 ):
     # batch data
     data_size = len(X)
     batches = batch_data(rng_key, (X, y), batch_size, data_size, replace=True)
 
-    # sgld functions
+    # sghmc functions
     grad_fn = cv_grad_estimator(
         logprior_fn, loglikelihood_fn, (X, y), centering_positions
     )
-    kern = blackjax.sgld(grad_fn)
+
+    kern = blackjax.sghmc(grad_fn, num_integration_steps)
     step_fn = jax.jit(kern.step)
 
     # get initial state
     init_state = kern.init(init_positions, next(batches))
 
-    # apply SGLD with lax.scan
+    # apply SGHMC with lax.scan
     @jax.jit
     def one_step(state, rng_key):
         batch = next(batches)
@@ -169,10 +199,13 @@ def SGLDCV(
     def ravel_fn(pytree):
         return jax.vmap(lambda tree: ravel_pytree(tree)[0])(pytree)
 
-    return positions, ravel_fn
+    def predict_fn(network, params, X_test):
+        return jax.vmap(lambda p: network().apply({"params": p}, X_test), 0)(params)
+
+    return positions, ravel_fn, predict_fn
 
 
-def SGLDSVRG(
+def sghmc_svrg(
     X: Array,
     y: Array,
     loglikelihood_fn: Callable,
@@ -182,6 +215,7 @@ def SGLDSVRG(
     step_size: float,
     num_iterations: int,
     centering_positions: Array,
+    num_integration_steps: int,
     svrg_update_freq: int,
     rng_key: Array,
 ):
@@ -195,8 +229,11 @@ def SGLDSVRG(
     grad_fn = grad_estimator(logprior_fn, loglikelihood_fn, data_size)
     cv_full_logprob_grad = grad_fn(centering_positions, (X, y))
 
-    schedule_fn = lambda _: step_size
-    kern = kernels.sgldsvrg(grad_fn, schedule_fn, (X, y), batches, svrg_update_freq)
+    def schedule_fn(_):
+        return step_size
+    kern = kernels.sghmcsvrg(
+        grad_fn, schedule_fn, (X, y), batches, svrg_update_freq, num_integration_steps
+    )
     step_fn = kern.step
 
     # Get initial parameters and state
@@ -219,4 +256,7 @@ def SGLDSVRG(
             lambda x: jnp.reshape(x, (-1, *x.shape[2:])), pytree
         )
 
-    return positions, ravel_fn
+    def predict_fn(network, params, X_test):
+        return jax.vmap(lambda p: network().apply({"params": p}, X_test), 0)(params)
+
+    return positions, ravel_fn, predict_fn
