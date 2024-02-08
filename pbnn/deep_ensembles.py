@@ -19,7 +19,45 @@ def deep_ensembles_fn(
     num_epochs: int,
     step_size: float,
     num_networks: int,
+    rng_key: Array,
 ):
+    """Functions that performs deep ensembles.
+
+    Parameters
+    ----------
+
+    X
+        Matrix of input features of size (N, d)
+    y
+        Matrix of output features of size (N, s)
+    loglikelihood_fn
+        Callable loglikelihood function
+    logprior_fn
+        Callable logprior function
+    network
+        Neural network given as a flax.linen.Module
+    batch_size
+        Batch size
+    num_epochs
+        Number of epochs used to train each member
+    step_size
+        Value of the step size (learning rate)
+    num_networks
+        Number of members in the deep ensembles
+    rng_key
+        A random seed
+
+    Returns
+    -------
+
+    parameters
+        Parameters of all the networks given as a PyTree
+    ravel_fn
+        Function that flattens the networks parameters
+    predict_fn
+        Function that makes predictions using the deep ensembles
+
+    """
     data_size = len(X)
     train_ds = {"x": X, "y": y}
 
@@ -68,7 +106,6 @@ def deep_ensembles_fn(
         initial_state.replace(params=params)
         return (initial_state, rng_key), state
 
-    rng_key = jax.random.PRNGKey(0)
     rng_key, init_rng = jax.random.split(rng_key)
     initial_state = create_train_state(init_rng, network(), train_ds["x"][0], step_size)
     _, states = jax.lax.scan(

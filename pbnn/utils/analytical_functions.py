@@ -192,7 +192,7 @@ def mlp_function(x: Array, params_rng_key: Array, noise: Array) -> Array:
 
 
 def ishigami_function(x: Array, noise: Array, a: int = 7, b: int = 0.1) -> Array:
-    """Ishigami function defined as:
+    r"""Ishigami function defined as:
 
     .. math::
 
@@ -226,7 +226,7 @@ def ishigami_function(x: Array, noise: Array, a: int = 7, b: int = 0.1) -> Array
 
 
 def gramacy_function(x: Array, noise: Array) -> Array:
-    """Non-stationnary test function from Gramacy (2007).
+    r"""Non-stationnary test function from Gramacy (2007).
 
     Parameters
     ~~~~~~~~~~
@@ -254,7 +254,7 @@ def gramacy_function(x: Array, noise: Array) -> Array:
 
 
 def g_function(x: Array, noise: Array) -> Array:
-    """G-function defined as:
+    r"""G-function defined as:
 
     .. math::
 

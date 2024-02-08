@@ -81,6 +81,44 @@ def sghmc(
     num_integration_steps: int,
     rng_key: Array,
 ):
+    """Wrapper of the SGHMC algorithm implemented in BlackJAX.
+
+    Parameters
+    ----------
+
+    X
+        Matrix of input features of size (N, d)
+    y
+        Matrix of output features of size (N, s)
+    loglikelihood_fn
+        Callable log-likelihood function
+    logprior_fn
+        Callable log-prior function
+    init_positions
+        PyTree of initial positions
+    batch_size
+        Batch size for the stochastic gradient estimator
+    step_size
+        Step size
+    num_iterations
+        Total number of iterations
+    num_integration_steps
+        Number of leapfrog steps
+    rng_key
+        Random seed key
+
+    Returns
+    -------
+
+    positions
+        Markov chain given as a PyTree
+    ravel_fn
+        Ravel function to flatten the PyTree
+    predict_fn
+        Function to make predictions
+
+    """
+
     # batch data
     data_size = len(X)
     batches = batch_data(rng_key, (X, y), batch_size, data_size, replace=True)
@@ -120,11 +158,48 @@ def adaptive_sghmc(
     logprior_fn: Callable,
     init_positions: Array,
     batch_size: int,
-    schedule_fn: Callable,
+    schedule_fn: Callable[[int], float],
     num_iterations: int,
     num_integration_steps: int,
     rng_key: Array,
 ):
+    """Wrapper of the cyclical SGHMC algorithm implemented in BlackJAX.
+
+    Parameters
+    ----------
+
+    X
+        Matrix of input features of size (N, d)
+    y
+        Matrix of output features of size (N, s)
+    loglikelihood_fn
+        Callable log-likelihood function
+    logprior_fn
+        Callable log-prior function
+    init_positions
+        PyTree of initial positions
+    batch_size
+        Batch size for the stochastic gradient estimator
+    schedule_fn
+        Callable that gives the step size w.r.t the current iteration
+    num_iterations
+        Total number of iterations
+    num_integration_steps
+        Number of leapfrog steps
+    rng_key
+        Random seed key
+
+    Returns
+    -------
+
+    positions
+        Markov chain given as a PyTree
+    ravel_fn
+        Ravel function to flatten the PyTree
+    predict_fn
+        Function to make predictions
+
+    """
     # batch data
     data_size = len(X)
     batches = batch_data(rng_key, (X, y), batch_size, data_size, replace=True)
@@ -171,6 +246,45 @@ def sghmc_cv(
     num_integration_steps: int,
     rng_key: Array,
 ):
+    """SGHMC-CV algorithm implemented by relying on BlackJAX.
+
+    Parameters
+    ----------
+
+    X
+        Matrix of input features of size (N, d)
+    y
+        Matrix of output features of size (N, s)
+    loglikelihood_fn
+        Callable log-likelihood function
+    logprior_fn
+        Callable log-prior function
+    init_positions
+        PyTree of initial positions
+    batch_size
+        Batch size for the stochastic gradient estimator
+    step_size
+        Step size
+    num_iterations
+        Total number of iterations
+    centering_positions
+        PyTree of control variates
+    num_integration_steps
+        Number of leapfrog steps
+    rng_key
+        Random seed key
+
+    Returns
+    -------
+
+    positions
+        Markov chain given as a PyTree
+    ravel_fn
+        Ravel function to flatten the PyTree
+    predict_fn
+        Function to make predictions
+
+    """
     # batch data
     data_size = len(X)
     batches = batch_data(rng_key, (X, y), batch_size, data_size, replace=True)
@@ -219,6 +333,47 @@ def sghmc_svrg(
     svrg_update_freq: int,
     rng_key: Array,
 ):
+    """SGHMC-SVRG algorithm implemented by relying on BlackJAX.
+
+    Parameters
+    ----------
+
+    X
+        Matrix of input features of size (N, d)
+    y
+        Matrix of output features of size (N, s)
+    loglikelihood_fn
+        Callable log-likelihood function
+    logprior_fn
+        Callable log-prior function
+    init_positions
+        PyTree of initial positions
+    batch_size
+        Batch size for the stochastic gradient estimator
+    step_size
+        Step size
+    num_iterations
+        Total number of iterations
+    centering_positions
+        PyTree of control variates
+    num_integration_steps
+        Number of leapfrog steps
+    svrg_update_freq
+        Frequency at which the control state is updated
+    rng_key
+        Random seed key
+
+    Returns
+    -------
+
+    positions
+        Markov chain given as a PyTree
+    ravel_fn
+        Ravel function to flatten the PyTree
+    predict_fn
+        Function to make predictions
+
+    """
     num_cv_iterations = num_iterations / svrg_update_freq
 
     # batch data
@@ -231,6 +386,7 @@ def sghmc_svrg(
 
     def schedule_fn(_):
         return step_size
+
     kern = kernels.sghmcsvrg(
         grad_fn, schedule_fn, (X, y), batches, svrg_update_freq, num_integration_steps
     )

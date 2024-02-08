@@ -3,7 +3,28 @@ import jax.numpy as jnp
 
 
 def batch_unlabeled_data(rng_key, data, batch_size, data_size, replace=True):
-    """Return an iterator over batches of data."""
+    """Batch generator for unlabeled data.
+    
+    Parameters
+    ----------
+    
+    rng_key
+        Random seed key
+    data
+        JAX Array
+    batch_size
+        batch_size
+    data_size
+        Dataset size
+    replace
+        Sample with replacement (default: True)
+        
+    Returns
+    -------
+    
+    Generator yielding batches of data
+    
+    """
     while True:
         _, rng_key = jax.random.split(rng_key)
         idx = jax.random.choice(
@@ -17,7 +38,28 @@ def batch_unlabeled_data(rng_key, data, batch_size, data_size, replace=True):
 
 
 def batch_labeled_data(rng_key, data, batch_size, data_size, replace=True):
-    """Return an iterator over batches of data."""
+    """Batch generator for labeled data.
+    
+    Parameters
+    ----------
+    
+    rng_key
+        Random seed key
+    data
+        Tuple (X, y) of labeled data
+    batch_size
+        batch_size
+    data_size
+        Dataset size
+    replace
+        Sample with replacement (default: True)
+        
+    Returns
+    -------
+    
+    Generator yielding batches of data
+    
+    """
     while True:
         _, rng_key = jax.random.split(rng_key)
         idx = jax.random.choice(

@@ -124,6 +124,43 @@ def swag_fn(
     cov_rank: int,
     rng_key: Array,
 ):
+    """Function that performs the SWAG algorithm.
+
+    Parameters
+    ----------
+
+    X
+        Matrix of input features (N, d)
+    y
+        Matrix of output features (N, s)
+    loglikelihood_fn
+        Callable loglikelihood function
+    logprior_fn
+        Callable logprior function
+    network
+        Neural network given as a flax.linen.nn
+    batch_size
+        Batch size
+    num_epochs
+        Number of epochs
+    step_size
+        Value of the step size
+    cov_rank
+        Rank of the covariance approximation in the SWAG method
+    rng_key
+        A random seed
+
+    Returns
+    --------
+
+    parameters
+        Generated parameters given as a PyTree
+    ravel_fn
+        Function that flattens the parameters
+    predict_fn
+        Function for making predictions
+
+    """
     data_size = len(X)
     train_ds = {"x": X, "y": y}
     logposterior_fn = build_logposterior_estimator_fn(

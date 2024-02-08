@@ -33,8 +33,44 @@ def mcdropout_fn(
     batch_size: int,
     num_epochs: int,
     step_size: float,
-    rng_key: Array
+    rng_key: Array,
 ):
+    """Function that performs Monte Carlo dropout.
+
+    Parameters
+    ----------
+
+    X
+        Matrix of input features (N, d)
+    y
+        Matrix of output features (N, s)
+    loglikelihood_fn
+        Callable loglikelihood function
+    logprior_fn
+        Callable logprior function
+    network
+        Neural network given as a flax.linen.nn
+    batch_size
+        Batch size
+    num_epochs
+        Number of epochs
+    step_size
+        Value of the step size
+    rng_key
+        A random seed
+
+    Returns
+    -------
+
+    parameters
+        Values of the obtained parameters
+    ravel_fn
+        Function that flattens the parameters
+    predict_fn
+        Function for making predictions
+
+    """
+
     data_size = len(X)
     train_ds = {"x": X, "y": y}
     logposterior_fn = build_logposterior_estimator_fn(

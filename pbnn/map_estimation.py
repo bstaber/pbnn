@@ -28,7 +28,34 @@ def train_fn(
     rng_key: Array,
     optimizer: str = "adam",
 ):
-    """Function that estimates the maximum a posteriori given the log-posterior function provided by the user."""
+    """Function that estimates the maximum a posteriori given the log-posterior function provided by the user.
+
+    Parameters
+    ----------
+
+    logposterior_fn
+        Callable logposterior function
+    network
+        Neural network given as a flax.linen.nn
+    train_ds
+        Training dataset given as a dict {"x": X, "y": y}
+    batch_size
+        Batch size
+    num_epochs
+        Number of epochs
+    learning_rate
+        Value of the step size
+    rng_key
+        A random seed
+    optimizer
+        Chosen optimizer given as a string ("sgd", "adam")
+
+    Returns
+    -------
+
+    Values of the parameters
+
+    """
 
     @jax.jit
     def train_step(state, batch):
