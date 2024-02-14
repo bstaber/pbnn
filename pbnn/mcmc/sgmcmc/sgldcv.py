@@ -3,23 +3,23 @@ from typing import Callable, NamedTuple
 
 import jax
 from blackjax.sgmcmc.diffusions import overdamped_langevin
-from blackjax.types import PRNGKey, PyTree
+from blackjax.types import PRNGKey, Array
 
 __all__ = ["SGLDCVState", "init", "kernel"]
 
 
 class SGLDCVState(NamedTuple):
     step: int
-    position: PyTree
-    batch_logprob_grad: PyTree
-    c_position: PyTree
-    c_full_logprob_grad: PyTree
-    c_batch_logprob_grad: PyTree
+    position: Array
+    batch_logprob_grad: Array
+    c_position: Array
+    c_full_logprob_grad: Array
+    c_batch_logprob_grad: Array
 
 
 def init(
-    position: PyTree,
-    c_position: PyTree,
+    position: Array,
+    c_position: Array,
     c_full_logprob_grad,
     batch,
     grad_estimator_fn: Callable,
@@ -40,7 +40,7 @@ def kernel(grad_estimator_fn: Callable) -> Callable:
     integrator = overdamped_langevin(grad_estimator_fn)
 
     def one_step(
-        rng_key: PRNGKey, state: SGLDCVState, data_batch: PyTree, step_size: float
+        rng_key: PRNGKey, state: SGLDCVState, data_batch: Array, step_size: float
     ) -> SGLDCVState:
         step, *diffusion_state = state
         (

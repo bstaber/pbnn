@@ -5,8 +5,8 @@ import jax
 
 from pbnn.mcmc.sgmcmc.diffusions import SGHMCCVState
 from pbnn.mcmc.sgmcmc.diffusions import sghmccv as sghmccv_diffusion
-from blackjax.sgmcmc.sghmc import sample_momentum
-from blackjax.types import PRNGKey, PyTree
+from blackjax.util import generate_gaussian_noise as sample_momentum
+from blackjax.types import PRNGKey, Array
 
 from typing import NamedTuple
 
@@ -15,16 +15,16 @@ __all__ = ["SGLDCVState", "init", "kernel"]
 
 class SGLDCVState(NamedTuple):
     step: int
-    position: PyTree
-    batch_logprob_grad: PyTree
-    c_position: PyTree
-    c_full_logprob_grad: PyTree
-    c_batch_logprob_grad: PyTree
+    position: Array
+    batch_logprob_grad: Array
+    c_position: Array
+    c_full_logprob_grad: Array
+    c_batch_logprob_grad: Array
 
 
 def init(
-    position: PyTree,
-    c_position: PyTree,
+    position: Array,
+    c_position: Array,
     c_full_logprob_grad,
     batch,
     grad_estimator_fn: Callable,
@@ -49,7 +49,7 @@ def kernel(
     def one_step(
         rng_key: PRNGKey,
         state: SGLDCVState,
-        data_batch: PyTree,
+        data_batch: Array,
         step_size: float,
         L: int,
     ) -> SGLDCVState:
@@ -61,7 +61,7 @@ def kernel(
             c_full_logprob_grad,
             c_batch_logprob_grad,
         ) = diffusion_state
-        momentum = sample_momentum(rng_key, position, step_size)
+        momentum = sample_momentum(rng_key, position)
         diffusion_state = SGHMCCVState(
             position,
             momentum,

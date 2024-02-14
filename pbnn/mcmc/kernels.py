@@ -1,8 +1,13 @@
-from typing import Callable
+from typing import Callable, NamedTuple
+
+import blackjax
 import jax
-import pbnn.mcmc.sgmcmc as sgmcmc
+import jax.numpy as jnp
+import optax
 from blackjax.base import SamplingAlgorithm
-from blackjax.types import PRNGKey, PyTree
+from blackjax.types import Array, PRNGKey
+
+import pbnn.mcmc.sgmcmc as sgmcmc
 
 __all__ = [
     "psgld",
@@ -77,16 +82,14 @@ class psgld:
     def __new__(  # type: ignore[misc]
         cls,
         grad_estimator_fn: Callable,
-        schedule_fn: Callable,
         alpha: float = 0.95,
     ) -> SamplingAlgorithm:
         step = cls.kernel(grad_estimator_fn)
 
-        def init_fn(position: PyTree, data_batch: PyTree):
+        def init_fn(position: Array, data_batch: Array):
             return cls.init(position, data_batch, grad_estimator_fn)
 
-        def step_fn(rng_key: PRNGKey, state, data_batch: PyTree):
-            step_size = schedule_fn(state.step)
+        def step_fn(rng_key: PRNGKey, state, data_batch: Array, step_size):
             return step(rng_key, state, data_batch, step_size, alpha)
 
         return SamplingAlgorithm(init_fn, step_fn)  # type: ignore[arg-type]
@@ -178,10 +181,10 @@ class sgldsvrg:
         step = cls.kernel(grad_estimator_fn)
 
         def init_fn(
-            position: PyTree,
-            c_position: PyTree,
-            c_full_loglike_grad: PyTree,
-            data_batch: PyTree,
+            position: Array,
+            c_position: Array,
+            c_full_loglike_grad: Array,
+            data_batch: Array,
         ):
             return cls.init(
                 position, c_position, c_full_loglike_grad, data_batch, grad_estimator_fn
@@ -300,10 +303,10 @@ class sghmcsvrg:
         step = cls.kernel(grad_estimator_fn)
 
         def init_fn(
-            position: PyTree,
-            c_position: PyTree,
-            c_full_loglike_grad: PyTree,
-            data_batch: PyTree,
+            position: Array,
+            c_position: Array,
+            c_full_loglike_grad: Array,
+            data_batch: Array,
         ):
             return cls.init(
                 position, c_position, c_full_loglike_grad, data_batch, grad_estimator_fn
@@ -333,5 +336,83 @@ class sghmcsvrg:
                 last_svrg_state.batch_logprob_grad,
             )
             return updated_state, svrg_states
+
+        return SamplingAlgorithm(init_fn, step_fn)  # type: ignore[arg-type]
+
+
+class ScheduleState(NamedTuple):
+    """State of the scheduleing."""
+
+    step_size: float
+    do_sample: bool
+
+
+class CyclicalSGMCMCState(NamedTuple):
+    """State of the Cyclical SGMCMC sampler."""
+
+    position: Array
+    opt_state: optax.OptState
+
+
+class CyclicalSGLD:
+    """Adapted from: https://blackjax-devs.github.io/sampling-book/algorithms/cyclical_sgld.html"""
+
+    sgd = optax.sgd(1)
+
+    def __new__(
+        cls,
+        grad_estimator_fn: Callable,
+        num_training_steps: int,
+        initial_step_size: float,
+        num_cycles: int = 4,
+        exploration_ratio: float = 0.25,
+    ) -> SamplingAlgorithm:
+        sgld = blackjax.sgld(grad_estimator_fn)
+
+        cycle_length = num_training_steps // num_cycles
+
+        def schedule_fn(step_id):
+            do_sample = jax.lax.cond(
+                ((step_id % cycle_length) / cycle_length) >= exploration_ratio,
+                lambda _: True,
+                lambda _: False,
+                step_id,
+            )
+
+            cos_out = jnp.cos(jnp.pi * (step_id % cycle_length) / cycle_length) + 1
+            step_size = 0.5 * cos_out * initial_step_size
+
+            return ScheduleState(step_size, do_sample)
+
+        def init_fn(position: Array):
+            opt_state = cls.sgd.init(position)
+            return CyclicalSGMCMCState(position, opt_state), schedule_fn
+
+        def step_fn(rng_key, state, minibatch, schedule_state):
+            """Cyclical SGD-SGLD kernel."""
+
+            def step_with_sgld(current_state):
+                rng_key, state, minibatch, step_size = current_state
+                new_position = sgld.step(rng_key, state.position, minibatch, step_size)
+                return new_position, state.opt_state
+
+            def step_with_sgd(current_state):
+                _, state, minibatch, step_size = current_state
+                grads = grad_estimator_fn(state.position, minibatch)
+                rescaled_grads = jax.tree_util.tree_map(lambda g: -1.0 * step_size * g, grads)
+                updates, new_opt_state = cls.sgd.update(
+                    rescaled_grads, state.opt_state, state.position
+                )
+                new_position = optax.apply_updates(state.position, updates)
+                return new_position, new_opt_state
+
+            new_position, new_opt_state = jax.lax.cond(
+                schedule_state.do_sample,
+                step_with_sgld,
+                step_with_sgd,
+                (rng_key, state, minibatch, schedule_state.step_size),
+            )
+            
+            return CyclicalSGMCMCState(new_position, new_opt_state)
 
         return SamplingAlgorithm(init_fn, step_fn)  # type: ignore[arg-type]

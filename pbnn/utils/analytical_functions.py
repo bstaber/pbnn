@@ -56,7 +56,6 @@ def trigonometric_function(x: Array, noise: Array) -> Array:
     """
     return jnp.cos(2.0 * x) + jnp.sin(x) + noise
 
-
 def heteroscedastic_trigonometric_function(x: Array, noise: Array) -> Array:
     r"""Simple trigonometric function of the form:
 

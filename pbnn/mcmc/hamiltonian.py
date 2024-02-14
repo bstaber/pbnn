@@ -1,15 +1,17 @@
-from typing import Callable
+from typing import Callable, NamedTuple
 
 import blackjax
 import jax
 import jax.numpy as jnp
-import kernels
-from blackjax.gradient import grad_estimator
+import jax.random as jr
+import optax
+from blackjax.sgmcmc.gradients import grad_estimator
 from jax import Array
 from jax.flatten_util import ravel_pytree
 
+from pbnn.mcmc import kernels
 from pbnn.mcmc.sgmcmc.gradients import cv_grad_estimator
-from pbnn.utils.data import batch_data
+from pbnn.utils.data import batch_labeled_data as batch_data
 
 
 def inference_loop(rng_key, step_fn, initial_state, num_samples):
@@ -151,7 +153,7 @@ def sghmc(
     return positions, ravel_fn, predict_fn
 
 
-def adaptive_sghmc(
+def scheduled_sghmc(
     X: Array,
     y: Array,
     loglikelihood_fn: Callable,
@@ -327,13 +329,13 @@ def sghmc_svrg(
     init_positions: Array,
     batch_size: int,
     step_size: float,
-    num_iterations: int,
     centering_positions: Array,
+    num_cv_iterations: int,
+    num_svrg_iterations: int,
     num_integration_steps: int,
-    svrg_update_freq: int,
     rng_key: Array,
 ):
-    """SGHMC-SVRG algorithm implemented by relying on BlackJAX.
+    """SGHMC-SVRG algorithm implemented using BlackJAX.
 
     Parameters
     ----------
@@ -356,10 +358,6 @@ def sghmc_svrg(
         Total number of iterations
     centering_positions
         PyTree of control variates
-    num_integration_steps
-        Number of leapfrog steps
-    svrg_update_freq
-        Frequency at which the control state is updated
     rng_key
         Random seed key
 
@@ -374,45 +372,149 @@ def sghmc_svrg(
         Function to make predictions
 
     """
-    num_cv_iterations = num_iterations / svrg_update_freq
-
     # batch data
     data_size = len(X)
     batches = batch_data(rng_key, (X, y), batch_size, data_size, replace=True)
 
-    # sgldsvrg functions
-    grad_fn = grad_estimator(logprior_fn, loglikelihood_fn, data_size)
-    cv_full_logprob_grad = grad_fn(centering_positions, (X, y))
+    # svrg functions
+    def one_svrg_step(state, rng_key):
+        positions, centering_positions = state
+        grad_fn = cv_grad_estimator(
+            logprior_fn, loglikelihood_fn, (X, y), centering_positions
+        )
 
-    def schedule_fn(_):
-        return step_size
+        kern = blackjax.sghmc(grad_fn, num_integration_steps)
+        sghmc_step_fn = kern.step
 
-    kern = kernels.sghmcsvrg(
-        grad_fn, schedule_fn, (X, y), batches, svrg_update_freq, num_integration_steps
+        # get initial state
+        init_state = kern.init(positions, next(batches))
+
+        @jax.jit
+        def one_cv_step(state, rng_key):
+            batch = next(batches)
+            new_state = sghmc_step_fn(rng_key, state, batch, step_size)
+            return new_state, new_state
+
+        keys = jax.random.split(rng_key, num_cv_iterations)
+        last_position, positions = jax.lax.scan(one_cv_step, init_state, keys)
+
+        return (last_position, last_position), positions
+
+    keys = jax.random.split(rng_key, num_svrg_iterations)
+    _, positions = jax.lax.scan(
+        one_svrg_step, (init_positions, centering_positions), keys
     )
-    step_fn = kern.step
 
-    # Get initial parameters and state
-    _, rng_key = jax.random.split(rng_key)
-    init_state = kern.init(
-        init_positions, centering_positions, cv_full_logprob_grad, next(batches)
-    )
-
-    # Apply SGLD-SVRG with lax.scan
-    def one_step(state, rng_key):
-        last_state, all_states = step_fn(rng_key, state)
-        return last_state, all_states.position
-
-    _, rng_key = jax.random.split(rng_key)
-    keys = jax.random.split(rng_key, num_cv_iterations)
-    _, positions = jax.lax.scan(one_step, init_state, keys)
-
-    def ravel_fn(pytree):
+    def reshape_fn(pytree):
         return jax.tree_util.tree_map(
             lambda x: jnp.reshape(x, (-1, *x.shape[2:])), pytree
         )
+
+    positions = reshape_fn(positions)
+
+    def ravel_fn(pytree):
+        return jax.vmap(lambda tree: ravel_pytree(tree)[0])(pytree)
 
     def predict_fn(network, params, X_test):
         return jax.vmap(lambda p: network().apply({"params": p}, X_test), 0)(params)
 
     return positions, ravel_fn, predict_fn
+
+
+# def sghmc_svrg(
+#     X: Array,
+#     y: Array,
+#     loglikelihood_fn: Callable,
+#     logprior_fn: Callable,
+#     init_positions: Array,
+#     batch_size: int,
+#     step_size: float,
+#     num_iterations: int,
+#     centering_positions: Array,
+#     num_integration_steps: int,
+#     svrg_update_freq: int,
+#     rng_key: Array,
+# ):
+#     """SGHMC-SVRG algorithm implemented by relying on BlackJAX.
+
+#     Parameters
+#     ----------
+
+#     X
+#         Matrix of input features of size (N, d)
+#     y
+#         Matrix of output features of size (N, s)
+#     loglikelihood_fn
+#         Callable log-likelihood function
+#     logprior_fn
+#         Callable log-prior function
+#     init_positions
+#         PyTree of initial positions
+#     batch_size
+#         Batch size for the stochastic gradient estimator
+#     step_size
+#         Step size
+#     num_iterations
+#         Total number of iterations
+#     centering_positions
+#         PyTree of control variates
+#     num_integration_steps
+#         Number of leapfrog steps
+#     svrg_update_freq
+#         Frequency at which the control state is updated
+#     rng_key
+#         Random seed key
+
+#     Returns
+#     -------
+
+#     positions
+#         Markov chain given as a PyTree
+#     ravel_fn
+#         Ravel function to flatten the PyTree
+#     predict_fn
+#         Function to make predictions
+
+#     """
+#     num_cv_iterations = num_iterations / svrg_update_freq
+
+#     # batch data
+#     data_size = len(X)
+#     batches = batch_data(rng_key, (X, y), batch_size, data_size, replace=True)
+
+#     # sgldsvrg functions
+#     grad_fn = grad_estimator(logprior_fn, loglikelihood_fn, data_size)
+#     cv_full_logprob_grad = grad_fn(centering_positions, (X, y))
+
+#     def schedule_fn(_):
+#         return step_size
+
+#     kern = kernels.sghmcsvrg(
+#         grad_fn, schedule_fn, (X, y), batches, svrg_update_freq, num_integration_steps
+#     )
+#     step_fn = kern.step
+
+#     # Get initial parameters and state
+#     _, rng_key = jax.random.split(rng_key)
+#     init_state = kern.init(
+#         init_positions, centering_positions, cv_full_logprob_grad, next(batches)
+#     )
+
+#     # Apply SGLD-SVRG with lax.scan
+#     def one_step(state, rng_key):
+#         last_state, all_states = step_fn(rng_key, state)
+#         return last_state, all_states.position
+
+#     _, rng_key = jax.random.split(rng_key)
+#     keys = jax.random.split(rng_key, num_cv_iterations)
+#     _, positions = jax.lax.scan(one_step, init_state, keys)
+
+#     def ravel_fn(pytree):
+#         return jax.tree_util.tree_map(
+#             lambda x: jnp.reshape(x, (-1, *x.shape[2:])), pytree
+#         )
+
+#     def predict_fn(network, params, X_test):
+#         return jax.vmap(lambda p: network().apply({"params": p}, X_test), 0)(params)
+
+#     return positions, ravel_fn, predict_fn

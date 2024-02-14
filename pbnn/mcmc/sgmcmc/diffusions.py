@@ -3,13 +3,13 @@ from typing import NamedTuple
 import jax
 import jax.numpy as jnp
 from blackjax.sgmcmc.diffusions import generate_gaussian_noise
-from blackjax.types import PRNGKey, PyTree
+from blackjax.types import Array, PRNGKey
 
 
 class pSGLDState(NamedTuple):
-    position: PyTree
-    logprob_grad: PyTree
-    square_avg: PyTree
+    position: Array
+    logprob_grad: Array
+    square_avg: Array
 
 
 def preconditioned_overdamped_langevin(logprob_grad_fn):
@@ -56,12 +56,12 @@ def preconditioned_overdamped_langevin(logprob_grad_fn):
 
 
 class SGHMCCVState(NamedTuple):
-    position: PyTree
-    momentum: PyTree
-    batch_logprob_grad: PyTree
-    c_position: PyTree
-    c_full_logprob_grad: PyTree
-    c_batch_logprob_grad: PyTree
+    position: Array
+    momentum: Array
+    batch_logprob_grad: Array
+    c_position: Array
+    c_full_logprob_grad: Array
+    c_batch_logprob_grad: Array
 
 
 def sghmccv(logprob_grad_fn, alpha: float = 0.01, beta: float = 0):
@@ -95,11 +95,13 @@ def sghmccv(logprob_grad_fn, alpha: float = 0.01, beta: float = 0):
         )
 
         noise = generate_gaussian_noise(rng_key, position)
-        position = jax.tree_util.tree_map(lambda x, p: x + p, position, momentum)
+        position = jax.tree_util.tree_map(
+            lambda x, p: x + step_size * p, position, momentum
+        )
         momentum = jax.tree_util.tree_map(
-            lambda p, g, n: (1.0 - alpha) * p
+            lambda p, g, n: (1.0 - alpha * step_size) * p
             + step_size * g
-            + jnp.sqrt(2 * step_size * (alpha - beta)) * n,
+            + jnp.sqrt(step_size * (2 * alpha - step_size * beta)) * n,
             momentum,
             logprob_grad,
             noise,

@@ -5,19 +5,19 @@ import jax.numpy as jnp
 from typing import Callable, NamedTuple
 
 from pbnn.mcmc.sgmcmc.diffusions import preconditioned_overdamped_langevin
-from blackjax.types import PRNGKey, PyTree
+from blackjax.types import PRNGKey, Array
 
 __all__ = ["init", "kernel"]
 
 
 class pSGLDState(NamedTuple):
     step: int
-    position: PyTree
-    logprob_grad: PyTree
-    square_avg: PyTree
+    position: Array
+    logprob_grad: Array
+    square_avg: Array
 
 
-def init(position: PyTree, batch, grad_estimator_fn: Callable):
+def init(position: Array, batch, grad_estimator_fn: Callable):
     logprob_grad = grad_estimator_fn(position, batch)
     square_avg = jax.tree_util.tree_map(jnp.square, logprob_grad)
     return pSGLDState(0, position, logprob_grad, square_avg)
@@ -29,7 +29,7 @@ def kernel(grad_estimator_fn: Callable) -> Callable:
     def one_step(
         rng_key: PRNGKey,
         state: pSGLDState,
-        data_batch: PyTree,
+        data_batch: Array,
         step_size: float,
         alpha: float,
     ) -> pSGLDState:

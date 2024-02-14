@@ -1,14 +1,14 @@
 from typing import Callable
 import jax
-from blackjax.types import PyTree
+from blackjax.types import Array
 from blackjax.sgmcmc.gradients import grad_estimator
 
 
 def cv_grad_estimator(
     logprior_fn: Callable,
     loglikelihood_fn: Callable,
-    data: PyTree,
-    centering_position: PyTree,
+    data: Array,
+    centering_position: Array,
 ) -> Callable:
     """Builds a control variate gradient estimator [1]_.
     Parameters
@@ -36,7 +36,7 @@ def cv_grad_estimator(
     # Control Variates use the gradient on the full dataset
     logposterior_grad_center = logposterior_grad_estimator_fn(centering_position, data)
 
-    def logposterior_estimator_fn(position: PyTree, data_batch: PyTree) -> float:
+    def logposterior_estimator_fn(position: Array, data_batch: Array) -> float:
         """Return an approximation of the log-posterior density.
         Parameters
         ----------
