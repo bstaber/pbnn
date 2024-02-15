@@ -3,13 +3,24 @@ from typing import Callable
 import flax.linen as nn
 import jax
 import jax.numpy as jnp
+import optax
+from flax.training import train_state
 from jax import Array
 from jax.flatten_util import ravel_pytree
 
-from pbnn.utils.misc import build_logposterior_estimator_fn, create_train_state
+
+def create_train_state(params_rng, dropout_rng, flax_module, init_input, learning_rate):
+    """Creates initial `TrainState`."""
+    params = flax_module.init(
+        {"params": params_rng, "dropout": dropout_rng}, init_input, deterministic=True
+    )["params"]
+    tx = optax.adam(learning_rate)
+    return train_state.TrainState.create(
+        apply_fn=flax_module.apply, params=params, tx=tx
+    )
 
 
-def logposterior_estimator_fn(
+def build_logposterior_estimator_fn(
     logprior_fn: Callable, loglikelihood_fn: Callable, data_size: int
 ) -> Callable:
     """Log posterior function"""
@@ -117,7 +128,7 @@ def mcdropout_fn(
     )
 
     state, _ = jax.lax.scan(one_train_epoch, initial_state, (perm_keys, dropout_keys))
-
+    
     def ravel_fn(pytree):
         return ravel_pytree(pytree)[0]
 
