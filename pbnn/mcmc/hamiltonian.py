@@ -1,16 +1,11 @@
-from typing import Callable, NamedTuple
+from typing import Callable
 
 import blackjax
 import jax
 import jax.numpy as jnp
-import jax.random as jr
-import optax
-from blackjax.sgmcmc.gradients import grad_estimator
+from blackjax.sgmcmc.gradients import grad_estimator, control_variates
 from jax import Array
 from jax.flatten_util import ravel_pytree
-
-from pbnn.mcmc import kernels
-from pbnn.mcmc.sgmcmc.gradients import cv_grad_estimator
 from pbnn.utils.data import batch_labeled_data as batch_data
 
 
@@ -292,9 +287,11 @@ def sghmc_cv(
     batches = batch_data(rng_key, (X, y), batch_size, data_size, replace=True)
 
     # sghmc functions
-    grad_fn = cv_grad_estimator(
-        logprior_fn, loglikelihood_fn, (X, y), centering_positions
-    )
+    # grad_fn = cv_grad_estimator(
+    #     logprior_fn, loglikelihood_fn, (X, y), centering_positions
+    # )
+    base_grad_fn = grad_estimator(logprior_fn, loglikelihood_fn, data_size)
+    grad_fn = control_variates(base_grad_fn, centering_positions, (X, y))
 
     kern = blackjax.sghmc(grad_fn, num_integration_steps)
     step_fn = jax.jit(kern.step)
@@ -379,9 +376,11 @@ def sghmc_svrg(
     # svrg functions
     def one_svrg_step(state, rng_key):
         positions, centering_positions = state
-        grad_fn = cv_grad_estimator(
-            logprior_fn, loglikelihood_fn, (X, y), centering_positions
-        )
+        # grad_fn = cv_grad_estimator(
+        #     logprior_fn, loglikelihood_fn, (X, y), centering_positions
+        # )
+        base_grad_fn = grad_estimator(logprior_fn, loglikelihood_fn, data_size)
+        grad_fn = control_variates(base_grad_fn, centering_positions, (X, y))
 
         kern = blackjax.sghmc(grad_fn, num_integration_steps)
         sghmc_step_fn = kern.step
