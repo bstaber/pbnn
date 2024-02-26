@@ -19,7 +19,6 @@ doc/_build/
 *.npz
 
 # Notebooks
-*.ipynb
 .ipynb_checkpoints/
 
 # slurm/sbatch files
