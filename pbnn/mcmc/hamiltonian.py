@@ -63,7 +63,14 @@ def hmc(
     step_fn = jax.jit(kern.step)
     init_state = kern.init(init_positions)
     infos, states = inference_loop(rng_key, step_fn, init_state, num_samples)
-    return infos, states
+
+    def ravel_fn(pytree):
+        return jax.vmap(lambda tree: ravel_pytree(tree)[0])(pytree)
+
+    def predict_fn(network, params, X_test):
+        return jax.vmap(lambda p: network().apply({"params": p}, X_test), 0)(params)    
+
+    return states.position, ravel_fn, predict_fn
 
 
 def sghmc(
