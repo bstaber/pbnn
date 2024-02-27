@@ -13,4 +13,4 @@ This small package implements a few methods for uncertainty quantification in de
    :maxdepth: 1
    :caption: API Documentation
 
-   Basic examples <sources/notebooks.rst>
+   Examples <sources/notebooks.rst>

@@ -1,5 +1,5 @@
-Notebooks
-=========
+Examples
+========
 
 You can find here all basic detailed examples.
 
@@ -8,3 +8,4 @@ You can find here all basic detailed examples.
    :maxdepth: 1
    
    notebooks/full_example
+   notebooks/thinning_example
