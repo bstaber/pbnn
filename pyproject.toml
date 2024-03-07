@@ -65,6 +65,5 @@ platforms = [
 
 [tool.setuptools.packages.find]
 exclude = [
-    "examples",
     "doc",
 ]

@@ -1,4 +1,8 @@
-from .hamiltonian import scheduled_sghmc, sghmc, sghmc_cv, sghmc_svrg
+# # This file is subject to the terms and conditions defined in
+# # file 'LICENSE.txt', which is part of this source code package.
+#
+
+from .hamiltonian import scheduled_sghmc, sghmc, sghmc_cv, sghmc_svrg, hmc
 from .langevin import cyclical_sgld, pSGLD, scheduled_sgld, sgld, sgld_cv, sgld_svrg
 
 __all__ = [
@@ -12,4 +16,5 @@ __all__ = [
     "sghmc",
     "sghmc_cv",
     "sghmc_svrg",
+    "hmc",
 ]

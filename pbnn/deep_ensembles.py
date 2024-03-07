@@ -1,3 +1,7 @@
+# # This file is subject to the terms and conditions defined in
+# # file 'LICENSE.txt', which is part of this source code package.
+#
+
 from typing import Callable
 
 import flax.linen as nn
@@ -102,12 +106,12 @@ def deep_ensembles_fn(
         rng_key = jax.random.PRNGKey(idx + 1)
         rng_key, init_rng = jax.random.split(rng_key)
 
-        params = network().init(init_rng, train_ds["x"][0])["params"]
+        params = network.init(init_rng, train_ds["x"][0])["params"]
         initial_state.replace(params=params)
         return (initial_state, rng_key), state
 
     rng_key, init_rng = jax.random.split(rng_key)
-    initial_state = create_train_state(init_rng, network(), train_ds["x"][0], step_size)
+    initial_state = create_train_state(init_rng, network, train_ds["x"][0], step_size)
     _, states = jax.lax.scan(
         one_training, (initial_state, rng_key), jnp.arange(0, num_networks)
     )
@@ -116,6 +120,6 @@ def deep_ensembles_fn(
         return jax.vmap(lambda tree: ravel_pytree(tree)[0])(pytree)
 
     def predict_fn(network, params, X_test):
-        return jax.vmap(lambda p: network().apply({"params": p}, X_test), 0)(params)
+        return jax.vmap(lambda p: network.apply({"params": p}, X_test), 0)(params)
 
     return states.params, ravel_fn, predict_fn

@@ -1,3 +1,7 @@
+# # This file is subject to the terms and conditions defined in
+# # file 'LICENSE.txt', which is part of this source code package.
+#
+
 from typing import Callable, NamedTuple
 
 import flax
@@ -176,7 +180,7 @@ def swag_fn(
     z2 = jax.random.normal(keys[1], shape=(num_samples, cov_rank))
 
     init_state = train_state.TrainState.create(
-        apply_fn=network().apply, params=init_positions, tx=optax.sgd(step_size)
+        apply_fn=network.apply, params=init_positions, tx=optax.sgd(step_size)
     )
 
     swag_train_fn = SwagModel(logposterior_fn, train_ds, batch_size, init_state)
@@ -202,7 +206,7 @@ def swag_fn(
     params_dict = jax.vmap(unravel_fn, 0)(params)
 
     def predict_fn(network, params, X_test):
-        return jax.vmap(lambda p: network().apply({"params": p}, X_test), 0)(
+        return jax.vmap(lambda p: network.apply({"params": p}, X_test), 0)(
             params
         ).squeeze()
 

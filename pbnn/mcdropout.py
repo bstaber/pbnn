@@ -1,3 +1,7 @@
+# # This file is subject to the terms and conditions defined in
+# # file 'LICENSE.txt', which is part of this source code package.
+#
+
 from typing import Callable
 
 import flax.linen as nn
@@ -124,7 +128,7 @@ def mcdropout_fn(
     perm_keys = jax.random.split(rng_key, num_epochs + 1)
     dropout_keys = jax.random.split(dropout_rng_key, num_epochs + 1)
     initial_state = create_train_state(
-        init_rng, dropout_rng_key, network(), train_ds["x"][0], step_size
+        init_rng, dropout_rng_key, network, train_ds["x"][0], step_size
     )
 
     state, _ = jax.lax.scan(one_train_epoch, initial_state, (perm_keys, dropout_keys))
@@ -134,7 +138,7 @@ def mcdropout_fn(
 
     def predict_fn(network, params, X_test, dropout_rng):
         return jax.vmap(
-            lambda x: network().apply(
+            lambda x: network.apply(
                 {"params": params},
                 x,
                 rngs={"dropout": dropout_rng},

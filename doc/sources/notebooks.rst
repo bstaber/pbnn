@@ -7,6 +7,6 @@ You can find here all basic detailed examples.
    :glob:
    :maxdepth: 1
    
+   notebooks/analytical_functions
    notebooks/full_example
    notebooks/thinning_example
-   notebooks/analytical_functions

@@ -1,3 +1,7 @@
+# # This file is subject to the terms and conditions defined in
+# # file 'LICENSE.txt', which is part of this source code package.
+#
+
 """Public API for the Preconditioned Stochastic gradient Langevin Dynamics kernel."""
 import jax
 import jax.numpy as jnp

@@ -1,3 +1,7 @@
+# # This file is subject to the terms and conditions defined in
+# # file 'LICENSE.txt', which is part of this source code package.
+#
+
 from typing import Callable, NamedTuple
 
 import blackjax
@@ -85,7 +89,7 @@ def sgld(
         return jax.vmap(lambda tree: ravel_pytree(tree)[0])(pytree)
 
     def predict_fn(network, params, X_test):
-        return jax.vmap(lambda p: network().apply({"params": p}, X_test), 0)(params)
+        return jax.vmap(lambda p: network.apply({"params": p}, X_test), 0)(params)
 
     return positions, ravel_fn, predict_fn
 
@@ -165,7 +169,7 @@ def pSGLD(
         return jax.vmap(lambda tree: ravel_pytree(tree)[0])(pytree)
 
     def predict_fn(network, params, X_test):
-        return jax.vmap(lambda p: network().apply({"params": p}, X_test), 0)(params)
+        return jax.vmap(lambda p: network.apply({"params": p}, X_test), 0)(params)
 
     return positions, ravel_fn, predict_fn
 
@@ -246,7 +250,7 @@ def scheduled_sgld(
         return jax.vmap(lambda tree: ravel_pytree(tree)[0])(pytree)
 
     def predict_fn(network, params, X_test):
-        return jax.vmap(lambda p: network().apply({"params": p}, X_test), 0)(params)
+        return jax.vmap(lambda p: network.apply({"params": p}, X_test), 0)(params)
 
     return positions, ravel_fn, predict_fn
 
@@ -330,7 +334,7 @@ def sgld_cv(
         return jax.vmap(lambda tree: ravel_pytree(tree)[0])(pytree)
 
     def predict_fn(network, params, X_test):
-        return jax.vmap(lambda p: network().apply({"params": p}, X_test), 0)(params)
+        return jax.vmap(lambda p: network.apply({"params": p}, X_test), 0)(params)
 
     return positions, ravel_fn, predict_fn
 
@@ -431,7 +435,7 @@ def sgld_svrg(
         return jax.vmap(lambda tree: ravel_pytree(tree)[0])(pytree)
 
     def predict_fn(network, params, X_test):
-        return jax.vmap(lambda p: network().apply({"params": p}, X_test), 0)(params)
+        return jax.vmap(lambda p: network.apply({"params": p}, X_test), 0)(params)
 
     return positions, ravel_fn, predict_fn
 
@@ -525,7 +529,7 @@ def sgld_svrg(
 #         )
 
 #     def predict_fn(network, params, X_test):
-#         return jax.vmap(lambda p: network().apply({"params": p}, X_test), 0)(params)
+#         return jax.vmap(lambda p: network.apply({"params": p}, X_test), 0)(params)
 
 #     return positions, ravel_fn, predict_fn
 
@@ -620,6 +624,6 @@ def cyclical_sgld(
     positions = jax.vmap(lambda p: unravel_fn(p), 0)(cycles_positions)
 
     def predict_fn(network, params, X_test):
-        return jax.vmap(lambda p: network().apply({"params": p}, X_test), 0)(params)
+        return jax.vmap(lambda p: network.apply({"params": p}, X_test), 0)(params)
 
     return positions, ravel_fn, predict_fn
