@@ -4,6 +4,7 @@ This repository gathers the algorithms and numerical experiments presented in th
 [Benchmarking Bayesian neural networks and evaluation metrics for regression tasks](https://arxiv.org/abs/2206.06779). 
 
 Please consider citing our paper if you find this code useful in your work:
+```bibtex
 article{staber2023benchmarking,
       title={Benchmarking Bayesian neural networks and evaluation metrics for regression tasks}, 
       author={Brian Staber and Sébastien Da Veiga},
@@ -11,6 +12,7 @@ article{staber2023benchmarking,
       eprint={2206.06779},
       archivePrefix={arXiv},
 }
+```
 
 ## Getting started
 
