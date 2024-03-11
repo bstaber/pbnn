@@ -10,3 +10,4 @@ You can find here all basic detailed examples.
    notebooks/analytical_functions
    notebooks/full_example
    notebooks/thinning_example
+   notebooks/flax_mapie
