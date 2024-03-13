@@ -11,3 +11,4 @@ You can find here all basic detailed examples.
    notebooks/full_example
    notebooks/thinning_example
    notebooks/flax_mapie
+   notebooks/laplace_approximations
