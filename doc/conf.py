@@ -76,6 +76,7 @@ myst_enable_extensions = [
     "tasklist",
 ]
 myst_heading_anchors = 7
+jupyter_execute_notebooks = "off"
 
 numfig = True
 autosummary_generate = True
