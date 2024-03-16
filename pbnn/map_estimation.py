@@ -8,6 +8,7 @@ import jax
 import optax
 from flax.training import train_state
 from jax import Array
+from pbnn.utils.data import NumpyDataset, NumpyLoader
 
 
 def create_train_state(rng, flax_module, init_input, learning_rate, optimizer="adam"):
@@ -66,7 +67,7 @@ def train_fn(
         """Train for a single step"""
 
         def loss_fn(params):
-            loss = -logposterior_fn(params, (batch["x"], batch["y"]))
+            loss = -logposterior_fn(params, batch)
             return loss
 
         grad_fn = jax.grad(loss_fn)
@@ -74,21 +75,10 @@ def train_fn(
         state = state.apply_gradients(grads=grads)
         return state
 
-    def train_epoch(state, train_ds, batch_size, rng):
-        """Train for a single epoch."""
-        train_ds_size = len(train_ds["x"])
-        steps_per_epoch = train_ds_size // batch_size
-
-        perms = jax.random.permutation(rng, train_ds_size)
-        perms = perms[: steps_per_epoch * batch_size]
-        perms = perms.reshape((steps_per_epoch, batch_size))
-
-        def one_step_fn(state, perm):
-            batch = {k: v[perm, ...] for k, v in train_ds.items()}
-            state = train_step(state, batch)
-            return state, None
-
-        state, _ = jax.lax.scan(one_step_fn, state, perms)
+    def train_model(state, data_loader):
+        for epoch in range(num_epochs):
+            for batch in data_loader:
+                state = train_step(state, batch)
         return state
 
     rng_key, init_rng = jax.random.split(rng_key)
@@ -102,12 +92,11 @@ def train_fn(
     )
     del init_rng
 
-    @jax.jit
-    def one_step(state, rng_key):
-        state = train_epoch(state, train_ds, batch_size, rng_key)
-        return state, state
+    dataset = NumpyDataset(train_ds["x"], train_ds["y"])
+    data_loader = NumpyLoader(
+        dataset, batch_size=batch_size, shuffle=True, drop_last=True
+    )
 
-    keys = jax.random.split(rng_key, num_epochs + 1)
-    last_state, _ = jax.lax.scan(one_step, initial_state, keys)
+    state = train_model(initial_state, data_loader)
 
-    return last_state.params
+    return state.params
