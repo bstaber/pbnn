@@ -1,0 +1,6 @@
+furo
+jax
+jaxlib
+blackjax
+sphinx-math-dollar
+myst_nb
