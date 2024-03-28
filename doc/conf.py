@@ -81,18 +81,25 @@ jupyter_execute_notebooks = "off"
 numfig = True
 autosummary_generate = True
 
-templates_path = ["_templates"]
+# templates_path = ["_templates"]
 master_doc = "index"
 exclude_patterns = ["_build", "Thumbs.db", ".DS_Store"]
 
 
 # -- Options for HTML output -------------------------------------------------
 html_theme = "furo"
-html_css_files = ["custom.css"]
-html_static_path = ["_static"]
-html_title = "pbnn"
-html_css_files = ["custom.css"]
-html_context = {"default_mode": "light"}
+# html_css_files = ["custom.css"]
+# html_static_path = ["_static"]
+# html_title = "pbnn"
+# html_context = {"default_mode": "light"}
+
+html_theme_options = {
+    "source_edit_link": "https://gitlab.com/drti/pbnn",
+    "source_branch": "main",
+    "source_directory": "doc/",
+}
+
+github_url = 'https://gitlab.com/drti/pbnn'
 
 autodoc_mock_imports = ["jax"]
 autodoc_member_order = "bysource"
