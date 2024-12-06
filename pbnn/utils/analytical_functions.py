@@ -58,7 +58,9 @@ def trigonometric_function(x: Array, noise: Array) -> Array:
     y
         Values of the function evaluated at the given inputs
     """
-    return jnp.cos(2.0 * x) + jnp.sin(x) + noise
+    f = jnp.cos(2.0 * x) + jnp.sin(x)
+    y = f + noise
+    return f, y
 
 def heteroscedastic_trigonometric_function(x: Array, noise: Array) -> Array:
     r"""Simple trigonometric function of the form:
@@ -253,7 +255,7 @@ def gramacy_function(x: Array, noise: Array) -> Array:
     )
     f = f.at[idx_2].set(x[idx_2] / 10.0 - 1.0)
     y = f + noise
-    return y
+    return f, y
 
 
 def g_function(x: Array, noise: Array) -> Array:
