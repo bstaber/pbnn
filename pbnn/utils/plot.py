@@ -96,3 +96,4 @@ def plot_on_axis(ax, X_test, y_test, mean_prediction, qlow, qhigh, title=None):
     if title is not None:
         ax.set_title(title, fontsize=14)
     ax.tick_params(labelsize=14)
+    return ax

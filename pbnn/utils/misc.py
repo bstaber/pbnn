@@ -71,7 +71,7 @@ def build_logposterior_estimator_fn(
     return logposterior_fn
 
 
-def thinning_fn(positions: Array, size: int):
+def thinning_fn(positions: Array, size: int, memory_efficient: bool = False):
     """Thins MCMC outputs by greedily minimizing the energy distance between
     empirical distributions.
 
@@ -82,6 +82,8 @@ def thinning_fn(positions: Array, size: int):
         MCMC chain given as an array of size (N, d)
     size
         Subsampling size
+    memory_efficient
+        Whether to use a memory-efficient implementation (default: False)
 
     Returns
     -------
@@ -106,8 +108,33 @@ def thinning_fn(positions: Array, size: int):
             )(Y)
         )(X)
 
-    Kmat = GramDistKernel(positions, positions)
-    k0_mean = jnp.mean(Kmat, axis=1)
+    def GramDistKernelElement(x: jnp.ndarray, Y: jnp.ndarray) -> jnp.ndarray:
+        """
+        Compute the kernel between a single point x and all points in Y.
+        """
+        return jax.vmap(
+            lambda y: jnp.sqrt(x @ x)
+            + jnp.sqrt(y @ y)
+            - jnp.sqrt(jnp.clip(x @ x + y @ y - 2 * x @ y, a_min=0))
+        )(Y)
+
+    n = positions.shape[0]
+    k0_mean = jnp.zeros((n,))
+
+    if memory_efficient:
+        # Define the loop body for jax.lax.fori_loop
+        def loop_body(i, k0_mean):
+            k0_mean = k0_mean.at[i].set(
+                jnp.mean(GramDistKernelElement(positions[i], positions))
+            )
+            return k0_mean
+
+        # Use JAX's fori_loop to iterate
+        k0_mean = jax.lax.fori_loop(0, n, loop_body, k0_mean)
+    else:
+        Kmat = GramDistKernel(positions, positions)
+        k0_mean = jnp.mean(Kmat, axis=1)
+
     k0 = k0_diag(positions)
     obj = k0 - 2.0 * k0_mean
     init = jnp.argmin(obj)
