@@ -1,7 +1,7 @@
 ## Introduction
 
 This repository gathers the algorithms and numerical experiments presented in the benchmark paper 
-[Benchmarking Bayesian neural networks and evaluation metrics for regression tasks](https://arxiv.org/abs/2206.06779). 
+[Benchmarking Bayesian neural networks and evaluation metrics for regression tasks](https://arxiv.org/abs/2206.06779).
 
 Please consider citing our paper if you find this code useful in your work:
 ```bibtex
@@ -13,6 +13,12 @@ article{staber2023benchmarking,
       archivePrefix={arXiv},
 }
 ```
+
+**This repository is a fork of [`pbnn`](https://gitlab.com/drti/pbnn/) from GitLab. It has been migrated to GitHub for further development.**
+
+This project was originally developed on GitLab. The original repository remains available at [GitLab](https://gitlab.com/drti/pbnn/).
+
+It is licensed under the MIT License – see the [LICENSE](LICENSE.txt) file for details.
 
 ## Getting started
 
