@@ -1,69 +1,30 @@
-[build-system]
-requires = [
-    "setuptools>=60",
-    "setuptools-scm>=8.0"]
-build-backend = "setuptools.build_meta"
-
 [project]
 name = "pbnn"
-authors= [{name = "Brian Staber", email = "brian.staber@safrangroup.com"}]
-description = "Prediction bands for neural networks"
-requires-python = ">=3.9"
-keywords=[
-    "machine learning",
-    "statistics",
-    "deep learning",
-    "bayesian inference",
-    "ensembles",
-    "mcmc",
-    "variational inference",
-    "laplace",
-    "uncertainty"
+version = "0.1.0"
+description = "Package that provides high-level user interface for uncertainty quantification in deep learning models. It is based on Flax and BlackJAX."
+authors = [
+    {name = "Brian Staber",email = "brian.staber@gmail.com"}
 ]
-classifiers = [
-    "Intended Audience :: Science/Research",
-    "License :: OSI Approved :: MIT License",
-    "Operating System :: MacOS",
-    "Operating System :: POSIX",
-    "Programming Language :: Python :: 3.9",
-    "Programming Language :: Python :: 3.10",
-    "Programming Language :: Python :: 3.11",
-    "Topic :: Scientific/Engineering",
-    "Topic :: Scientific/Engineering :: Artificial Intelligence",
-    "Topic :: Scientific/Engineering :: Mathematics",
-]
+license = {text = "MIT"}
+readme = "README.md"
+requires-python = ">=3.10"
+
+# Don't include jaxlib at all – user installs manually for GPU
 dependencies = [
-    "blackjax>=1.1.0",
-    "numpy",
-    "scipy",
-    "typing-extensions>=4.4.0",
-]
-dynamic = ["version"]
-
-[tool.setuptools_scm]
-write_to = "pbnn/_version.py"
-
-[project.urls]
-homepage = "https://gitlab.com/drti/pbnn"
-documentation = "https://pbnn.readthedocs.io/en/latest/"
-repository = "https://gitlab.com/drti/pbnn"
-
-[project.license]
-text="MIT License"
-files=["LICENSE"]
-
-[project.readme]
-file="README.md"
-content-type = "text/markdown"
-
-[tool.setuptools]
-platforms = [
-    "Linux",
-    "Mac OS-X",
-    "Unix",
+    "blackjax (>=1.1.0)",
+    "numpy (>=2.2.4,<3.0.0)",
+    "flax (>=0.10.4,<0.11.0)",
+    "matplotlib (>=3.10.1,<4.0.0)",
+    "scikit-learn (>=1.6.1,<2.0.0)",
+    "torch (>=2.6.0,<3.0.0)",
+    "watermark (>=2.5.0,<3.0.0)",
 ]
 
-[tool.setuptools.packages.find]
-exclude = [
-    "doc",
-]
+[tool.poetry.group.dev.dependencies]
+pytest = "^8.3.5"
+ruff = "^0.11.2"
+ipykernel = "^6.29.5"
+
+[build-system]
+requires = ["poetry-core>=2.0.0,<3.0.0"]
+build-backend = "poetry.core.masonry.api"

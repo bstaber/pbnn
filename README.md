@@ -31,7 +31,15 @@ pip install pbnn
 ```
 
 Note that `pbnn` relies on [JAX](https://github.com/google/jax) which will be installed through [BlackJAX](https://github.com/blackjax-devs/blackjax), the main dependance of this package. 
-The code will run on CPU only unless you install JAX with GPU support (see [official instructions](https://github.com/google/jax#installation)). 
+The code will run on CPU only unless you install JAX with GPU support. 
+
+For example, for CUDA 12:
+```bash
+pip install --upgrade "jax[cuda12_pip]" -f https://storage.googleapis.com/jax-releases/jax_cuda_releases.html
+```
+
+For more details, see the [official JAX installation instructions](https://github.com/google/jax#installation).
+
 JAX has been mainly chosen for its composable function transformations (such as `grad`, `jit`, or `scan`) that make MCMC methods for 
 neural networks computationally tractable.
 
