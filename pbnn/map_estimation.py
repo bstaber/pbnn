@@ -1,23 +1,39 @@
-# # This file is subject to the terms and conditions defined in
-# # file 'LICENSE.txt', which is part of this source code package.
-#
+"""Module for MAP estimation using neural networks using JAX and Flax."""
+# This file is subject to the terms and conditions defined in
+# file 'LICENSE.txt', which is part of this source code package.
 
-from typing import Callable
+from typing import Callable, Optional
 
+import flax.linen as nn
 import jax
+import jax.numpy as jnp
 import optax
 from flax.training import train_state
 from jax import Array
+
 from pbnn.utils.data import NumpyDataset, NumpyLoader
 
 
-def create_train_state(rng, flax_module, init_input, learning_rate, optimizer="adam"):
-    """Creates initial `TrainState`."""
+def create_train_state(
+    rng: Array,
+    flax_module: nn.Module,
+    init_input: Array,
+    learning_rate: float,
+    optimizer: Optional[str] = "adam",
+) -> train_state.TrainState:
+    """Creates initial `TrainState`.
+
+    Args:
+        rng: Initial random key
+        flax_module: Flax module to use
+        init_input: Initial input to the module
+        learning_rate: Learning rate to use
+        optimizer: Optimizer to use. Defaults to "adam"
+
+    Returns: train_state.TrainState: initial training state.
+    """
     params = flax_module.init(rng, init_input)["params"]
-    if optimizer == "sgd":
-        tx = optax.sgd(learning_rate)
-    elif optimizer == "adam":
-        tx = optax.adam(learning_rate)
+    tx = optax.adam(learning_rate) if optimizer == "adam" else optax.sgd(learning_rate)
     return train_state.TrainState.create(
         apply_fn=flax_module.apply, params=params, tx=tx
     )
@@ -35,54 +51,38 @@ def train_fn(
 ):
     """Function that estimates the maximum a posteriori given the log-posterior function provided by the user.
 
-    Parameters
-    ----------
+    Args:
+        logposterior_fn: Callable logposterior function
+        network: Neural network given as a flax.linen.nn
+        train_ds: Training dataset given as a dict {"x": X, "y": y}
+        batch_size: Batch size
+        num_epochs: Number of epochs
+        learning_rate: Value of the step size
+        rng_key: A random seed
+        optimizer: Chosen optimizer given as a string ("sgd", "adam")
 
-    logposterior_fn
-        Callable logposterior function
-    network
-        Neural network given as a flax.linen.nn
-    train_ds
-        Training dataset given as a dict {"x": X, "y": y}
-    batch_size
-        Batch size
-    num_epochs
-        Number of epochs
-    learning_rate
-        Value of the step size
-    rng_key
-        A random seed
-    optimizer
-        Chosen optimizer given as a string ("sgd", "adam")
-
-    Returns
-    -------
-
-    Values of the parameters
-
+    Returns: MAP estimation of the parameters.
     """
 
-    @jax.jit
+    def loss_fn(params, batch):
+        return -logposterior_fn(params, batch)
+
+    grad_fn = jax.grad(loss_fn)
+
     def train_step(state, batch):
-        """Train for a single step"""
+        grads = grad_fn(state.params, batch)
+        return state.apply_gradients(grads=grads)
 
-        def loss_fn(params):
-            loss = -logposterior_fn(params, batch)
-            return loss
+    @jax.jit
+    def run_epoch(state, batches):
+        def step_fn(state, batch):
+            state = train_step(state, batch)
+            return state, None
 
-        grad_fn = jax.grad(loss_fn)
-        grads = grad_fn(state.params)
-        state = state.apply_gradients(grads=grads)
-        return state
-
-    def train_model(state, data_loader):
-        for epoch in range(num_epochs):
-            for batch in data_loader:
-                state = train_step(state, batch)
+        state, _ = jax.lax.scan(step_fn, state, batches)
         return state
 
     rng_key, init_rng = jax.random.split(rng_key)
-
     initial_state = create_train_state(
         init_rng,
         network,
@@ -90,13 +90,19 @@ def train_fn(
         learning_rate,
         optimizer=optimizer,
     )
-    del init_rng
 
+    # Prebatch data to allow scan
     dataset = NumpyDataset(train_ds["x"], train_ds["y"])
     data_loader = NumpyLoader(
         dataset, batch_size=batch_size, shuffle=True, drop_last=True
     )
+    batches = list(data_loader)
+    batches = jax.tree_util.tree_map(
+        lambda *xs: jnp.stack(xs), *batches
+    )  # shape: (num_batches, ...)
 
-    state = train_model(initial_state, data_loader)
+    state = initial_state
+    for _ in range(num_epochs):
+        state = run_epoch(state, batches)
 
     return state.params
