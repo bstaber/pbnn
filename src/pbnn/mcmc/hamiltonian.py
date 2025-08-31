@@ -7,6 +7,7 @@ from typing import Callable
 
 import blackjax
 import jax
+import jax.numpy as jnp
 from blackjax.sgmcmc.gradients import control_variates, grad_estimator
 from jax import Array
 from jax.flatten_util import ravel_pytree

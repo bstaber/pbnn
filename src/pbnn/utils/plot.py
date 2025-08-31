@@ -9,9 +9,9 @@ from jax import Array
 
 
 def plot_interval(
-    X: Array,
+    _X: Array,
     X_test: Array,
-    y: Array,
+    _y: Array,
     y_test: Array,
     y_pred: Array,
     alpha: float = 0.05,

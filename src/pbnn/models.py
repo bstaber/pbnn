@@ -1,3 +1,4 @@
+"""Model definitions."""
 # # This file is subject to the terms and conditions defined in
 # # file 'LICENSE.txt', which is part of this source code package.
 #
@@ -13,6 +14,7 @@ class MLP(nn.Module):
 
     @nn.compact
     def __call__(self, x):
+        """Forward pass."""
         x = nn.Dense(
             features=self.hidden_features,
             kernel_init=nn.initializers.normal(),
@@ -42,6 +44,7 @@ class MLPDropout(nn.Module):
 
     @nn.compact
     def __call__(self, x, deterministic=False):
+        """Forward pass with dropout."""
         x = nn.Dense(
             features=self.hidden_features,
             kernel_init=nn.initializers.normal(),

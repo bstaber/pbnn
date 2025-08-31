@@ -23,12 +23,14 @@ class pSGLDState(NamedTuple):
 
 
 def init(position: Array, batch, grad_estimator_fn: Callable):
+    """Initialize the pSGLD state."""
     logprob_grad = grad_estimator_fn(position, batch)
     square_avg = jax.tree_util.tree_map(jnp.square, logprob_grad)
     return pSGLDState(0, position, logprob_grad, square_avg)
 
 
 def kernel(grad_estimator_fn: Callable) -> Callable:
+    """Builds a one-step pSGLD transition kernel."""
     integrator = preconditioned_overdamped_langevin(grad_estimator_fn)
 
     def one_step(

@@ -77,11 +77,12 @@ class psgld:
     init = staticmethod(sgmcmc.psgld.init)
     kernel = staticmethod(sgmcmc.psgld.kernel)
 
-    def __new__(  # type: ignore[misc]
+    def __new__(
         cls,
         grad_estimator_fn: Callable,
         alpha: float = 0.95,
     ) -> SamplingAlgorithm:
+        """Builds a ``SamplingAlgorithm`` for the pSGLD kernel."""
         step = cls.kernel(grad_estimator_fn)
 
         def init_fn(position: Array, data_batch: Array):

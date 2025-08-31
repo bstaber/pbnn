@@ -1,3 +1,4 @@
+"""Diffusion processes for SGMCMC algorithms."""
 # # This file is subject to the terms and conditions defined in
 # # file 'LICENSE.txt', which is part of this source code package.
 #
@@ -11,6 +12,8 @@ from blackjax.types import Array, PRNGKey
 
 
 class pSGLDState(NamedTuple):
+    """State of the pSGLD diffusion process."""
+
     position: Array
     logprob_grad: Array
     square_avg: Array
