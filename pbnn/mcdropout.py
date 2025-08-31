@@ -1,8 +1,8 @@
-# # This file is subject to the terms and conditions defined in
-# # file 'LICENSE.txt', which is part of this source code package.
-#
+"""Monte Carlo dropout for Bayesian neural networks."""
+# This file is subject to the terms and conditions defined in
+# file 'LICENSE.txt', which is part of this source code package.
 
-from typing import Callable
+from typing import Callable, Tuple
 
 import flax.linen as nn
 import jax
@@ -13,8 +13,20 @@ from jax import Array
 from jax.flatten_util import ravel_pytree
 
 
-def create_train_state(params_rng, dropout_rng, flax_module, init_input, learning_rate):
-    """Creates initial `TrainState`."""
+def create_train_state(
+    params_rng, dropout_rng, flax_module, init_input, learning_rate
+) -> train_state.TrainState:
+    """Creates initial `TrainState`.
+
+    Args:
+        params_rng: Initial random key for the parameters
+        dropout_rng: Initial random key for the dropout
+        flax_module: Flax module to use
+        init_input: Initial input to the module
+        learning_rate: Learning rate to use
+
+    Returns: initial training state.
+    """
     params = flax_module.init(
         {"params": params_rng, "dropout": dropout_rng}, init_input, deterministic=True
     )["params"]
@@ -27,7 +39,15 @@ def create_train_state(params_rng, dropout_rng, flax_module, init_input, learnin
 def build_logposterior_estimator_fn(
     logprior_fn: Callable, loglikelihood_fn: Callable, data_size: int
 ) -> Callable:
-    """Log posterior function"""
+    """Builds the callable logposterior function.
+
+    Args:
+        logprior_fn: Log prior function
+        loglikelihood_fn: Log likelihood function
+        data_size: Size of the data
+
+    Returns: Callable logposterior function
+    """
 
     def logposterior_fn(parameters, data_batch, dropout_rng):
         logprior = logprior_fn(parameters)
@@ -49,43 +69,22 @@ def mcdropout_fn(
     num_epochs: int,
     step_size: float,
     rng_key: Array,
-):
+) -> Tuple[Array, Callable, Callable]:
     """Function that performs Monte Carlo dropout.
 
-    Parameters
-    ----------
+    Args:
+        X: Matrix of input features (N, d)
+        y: Matrix of output features (N, s)
+        loglikelihood_fn: Callable loglikelihood function
+        logprior_fn: Callable logprior function
+        network: Neural network given as a flax.linen.nn
+        batch_size: Batch size
+        num_epochs: Number of epochs
+        step_size: Value of the step size
+        rng_key: A random seed
 
-    X
-        Matrix of input features (N, d)
-    y
-        Matrix of output features (N, s)
-    loglikelihood_fn
-        Callable loglikelihood function
-    logprior_fn
-        Callable logprior function
-    network
-        Neural network given as a flax.linen.nn
-    batch_size
-        Batch size
-    num_epochs
-        Number of epochs
-    step_size
-        Value of the step size
-    rng_key
-        A random seed
-
-    Returns
-    -------
-
-    parameters
-        Values of the obtained parameters
-    ravel_fn
-        Function that flattens the parameters
-    predict_fn
-        Function for making predictions
-
+    Returns: Parameters of the obtained model, a function that flattens the parameters and a function that makes predictions using the model.
     """
-
     data_size = len(X)
     train_ds = {"x": X, "y": y}
     logposterior_fn = build_logposterior_estimator_fn(
@@ -132,7 +131,7 @@ def mcdropout_fn(
     )
 
     state, _ = jax.lax.scan(one_train_epoch, initial_state, (perm_keys, dropout_keys))
-    
+
     def ravel_fn(pytree):
         return ravel_pytree(pytree)[0]
 

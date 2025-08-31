@@ -1,8 +1,8 @@
-# # This file is subject to the terms and conditions defined in
-# # file 'LICENSE.txt', which is part of this source code package.
-#
+"""SWAG algorithm for Bayesian neural networks."""
+# This file is subject to the terms and conditions defined in
+# file 'LICENSE.txt', which is part of this source code package.
 
-from typing import Callable, NamedTuple
+from typing import Callable, NamedTuple, Tuple
 
 import flax
 import flax.linen as nn
@@ -17,6 +17,15 @@ from pbnn.utils.misc import build_logposterior_estimator_fn
 
 
 class SWAGState(NamedTuple):
+    """Named tuple for the SWAG state.
+
+    Attributes:
+        num_models: int
+        mean: flax.core.FrozenDict
+        som: flax.core.FrozenDict
+
+    """
+
     num_models: int
     mean: flax.core.FrozenDict
     som: flax.core.FrozenDict
@@ -28,7 +37,14 @@ class SwagModel:
     def __new__(
         cls, logposterior_fn: Callable, train_ds: dict, batch_size: int, initial_state
     ):
-        """Function that estimates the maximum a posteriori given the log-posterior function provided by the user."""
+        """Creates a function that estimates the maximum a posteriori given the log-posterior function provided by the user.
+
+        Args:
+            logposterior_fn: Callable logposterior function
+            train_ds: Training dataset given as a dict {"x": X, "y": y}
+            batch_size: Batch size
+            initial_state: Initial state
+        """
 
         def loss_fn(params, batch):
             loss = -logposterior_fn(params, (batch["x"], batch["y"]))
@@ -72,26 +88,27 @@ class SwagModel:
             )
             return state, SWAGState(num_models + 1, mean, som)
 
-        @jax.jit
-        def one_epoch_without_cov(states, rng_key):
-            train_state, swag_state = states
-            train_state, swag_state = train_epoch(
-                train_state, swag_state, train_ds, batch_size, rng_key
-            )
-            return (train_state, swag_state), None
+        def make_train_step_fn(with_cov: bool):
+            @jax.jit
+            def train_step(states, rng_key):
+                train_state, swag_state = states
+                train_state, swag_state = train_epoch(
+                    train_state, swag_state, train_ds, batch_size, rng_key
+                )
+                if with_cov:
+                    dev = jax.tree_util.tree_map(
+                        lambda x, y: x - y, train_state.params, swag_state.mean
+                    )
+                    return (train_state, swag_state), dev
+                else:
+                    return (train_state, swag_state), None
 
-        @jax.jit
-        def one_epoch_with_cov(states, rng_key):
-            train_state, swag_state = states
-            train_state, swag_state = train_epoch(
-                train_state, swag_state, train_ds, batch_size, rng_key
-            )
-            dev = jax.tree_util.tree_map(
-                lambda x, y: x - y, train_state.params, swag_state.mean
-            )
-            return (train_state, swag_state), dev
+            return train_step
 
-        def train_fn(num_epochs: int, rank: int, rng_key: jax.random.KeyArray):
+        train_step_wo_cov = make_train_step_fn(with_cov=False)
+        train_step_with_cov = make_train_step_fn(with_cov=True)
+
+        def train_fn(num_epochs: int, rank: int, rng_key: Array):
             # rng_key = jax.random.PRNGKey(0)
             rng_key_wo_cov, rng_key_w_cov = jax.random.split(rng_key)
 
@@ -101,13 +118,14 @@ class SwagModel:
                 initial_state.params,
                 jax.tree_util.tree_map(lambda x: jnp.square(x), initial_state.params),
             )
+
             (train_state, swag_state), _ = jax.lax.scan(
-                one_epoch_without_cov, (initial_state, initial_swag_state), keys
+                train_step_wo_cov, (initial_state, initial_swag_state), keys
             )
 
             keys = jax.random.split(rng_key_w_cov, rank)
             (train_state, swag_state), devs = jax.lax.scan(
-                one_epoch_with_cov, (train_state, swag_state), keys
+                train_step_with_cov, (train_state, swag_state), keys
             )
 
             return (train_state, swag_state), devs
@@ -127,43 +145,23 @@ def swag_fn(
     step_size: float,
     cov_rank: int,
     rng_key: Array,
-):
+) -> Tuple[Array, Callable, Callable]:
     """Function that performs the SWAG algorithm.
 
-    Parameters
-    ----------
+    Args:
+        X: Matrix of input features (N, d)
+        y: Matrix of output features (N, s)
+        loglikelihood_fn: Callable loglikelihood function
+        logprior_fn: Callable logprior function
+        network: Neural network given as a flax.linen.nn
+        init_positions: Initial parameters of the network
+        batch_size: Batch size
+        num_epochs: Number of epochs
+        step_size: Value of the step size
+        cov_rank: Rank of the covariance approximation in the SWAG method
+        rng_key: A random seed
 
-    X
-        Matrix of input features (N, d)
-    y
-        Matrix of output features (N, s)
-    loglikelihood_fn
-        Callable loglikelihood function
-    logprior_fn
-        Callable logprior function
-    network
-        Neural network given as a flax.linen.nn
-    batch_size
-        Batch size
-    num_epochs
-        Number of epochs
-    step_size
-        Value of the step size
-    cov_rank
-        Rank of the covariance approximation in the SWAG method
-    rng_key
-        A random seed
-
-    Returns
-    --------
-
-    parameters
-        Generated parameters given as a PyTree
-    ravel_fn
-        Function that flattens the parameters
-    predict_fn
-        Function for making predictions
-
+    Returns: Parameters of the obtained SWAG model, a function that flattens the parameters and a function that makes predictions using the SWAG model.
     """
     data_size = len(X)
     train_ds = {"x": X, "y": y}
