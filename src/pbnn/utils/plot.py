@@ -1,8 +1,7 @@
+"""Utility functions for plotting prediction intervals."""
 # # This file is subject to the terms and conditions defined in
 # # file 'LICENSE.txt', which is part of this source code package.
 #
-
-import shutil
 
 import jax.numpy as jnp
 import matplotlib.pyplot as plt
@@ -10,45 +9,30 @@ from jax import Array
 
 
 def plot_interval(
-    X: Array,
+    _X: Array,
     X_test: Array,
-    y: Array,
+    _y: Array,
     y_test: Array,
     y_pred: Array,
     alpha: float = 0.05,
     save_to_file=None,
     use_tex: bool = False,
 ):
-    """Function that plots a prediction and the associated interval along with
-    the training and test data. Only works for one-dimensional problems.
+    """Function that plots the prediction interval along with the test data.
 
-    Parameters
-    ----------
+    Args:
+        X: Training inputs, shape (N, D).
+        X_test: Test inputs, shape (M, D).
+        y: Training targets, shape (N,).
+        y_test: Test targets, shape (M,).
+        y_pred: Predictions on the test set, shape (num_samples, M).
+        alpha: Significance level for the prediction interval. Default is 0.05 for a 95% interval.
+        save_to_file: If provided, saves the plot to the specified file path (without extension).
+        use_tex: If True, uses LaTeX for rendering text in the plot.
 
-    X
-        Vector of training input features of size (N, )
-    X_test
-        Vector of test input features of size (M, )
-    y
-        Vector of training outputs of size (N, 1)
-    y_test
-        Vector of test outputs of size (M, 1)
-    y_pred
-        Vector of predictions on the test set of size (M, )
-    alpha
-        Confidence level (default: 0.05)
-    save_to_file
-        Filename (without extension) to be used for saving the picture (default: None, not saving the figure)
-    use_tex
-        Use LaTeX for rendering
-
-    Returns
-    -------
-
-    Figure handle.
-
+    Returns:
+        fig: The matplotlib figure object containing the plot.
     """
-
     mpl_options = {
         "font.family": "sans-serif",
         "font.sans-serif": "Helvetica",
@@ -73,6 +57,7 @@ def plot_interval(
 
 
 def plot_on_axis(ax, X_test, y_test, mean_prediction, qlow, qhigh, title=None):
+    """Function that plots a prediction and the associated interval along with the test data on a given axis."""
     # interval
     ax.fill_between(X_test.squeeze(), qlow, qhigh, color="tab:red", alpha=0.5)
     ax.plot(

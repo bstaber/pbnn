@@ -1,3 +1,4 @@
+"""Miscellaneous utility functions."""
 # # This file is subject to the terms and conditions defined in
 # # file 'LICENSE.txt', which is part of this source code package.
 #
@@ -14,23 +15,14 @@ from jax import Array
 def create_train_state(rng, flax_module, init_input, learning_rate):
     """Creates an initial Flax `TrainState`.
 
-    Parameters
-    ----------
+    Args:
+        rng: JAX random seed key
+        flax_module: A Flax module, e.g., a neural network model
+        init_input: Example input to initialize the model parameters
+        learning_rate: Learning rate for the Adam optimizer
 
-    rng
-        Random seed key
-    flax_module
-        A Flax Module such as a network
-    init_input
-        Arbitrary input features used to instantiate initial network parameters
-    learning_rate
-        Step size
-
-    Returns
-    -------
-
-    An initial train state
-
+    Returns:
+        An initialized `TrainState` with model parameters and optimizer
     """
     params = flax_module.init(rng, init_input)["params"]
     tx = optax.adam(learning_rate)
@@ -44,21 +36,13 @@ def build_logposterior_estimator_fn(
 ) -> Callable:
     """Builds a callable logposterior function.
 
-    Parameters
-    ----------
+    Args:
+        logprior_fn: Function that computes the log-prior given parameters
+        loglikelihood_fn: Function that computes the log-likelihood given parameters and a data batch
+        data_size: Total size of the dataset
 
-    logprior_fn
-        Callable logprior function
-    loglikelihood_fn
-        Callable loglikelihood function
-    data_size
-        Dataset size
-
-    Returns
-    -------
-
-    Callable logposterior function
-
+    Returns:
+        A callable function that computes the log-posterior given parameters and a data batch
     """
 
     def logposterior_fn(parameters, data_batch):
@@ -72,24 +56,15 @@ def build_logposterior_estimator_fn(
 
 
 def thinning_fn(positions: Array, size: int, memory_efficient: bool = False):
-    """Thins MCMC outputs by greedily minimizing the energy distance between
-    empirical distributions.
+    """Thins MCMC outputs by greedily minimizing the energy distance between empirical distributions.
 
-    Parameters
-    ----------
+    Args:
+        positions: Array of shape (N, D) representing N samples in D dimensions
+        size: Desired number of thinned samples
+        memory_efficient: If True, uses a memory-efficient approach to compute the thinning
 
-    positions
-        MCMC chain given as an array of size (N, d)
-    size
-        Subsampling size
-    memory_efficient
-        Whether to use a memory-efficient implementation (default: False)
-
-    Returns
-    -------
-
-    Array of indices corresponding to the selected particles
-
+    Returns:
+        Array of indices corresponding to the selected thinned samples
     """
 
     def kernelfn(x1, x2):
@@ -109,9 +84,7 @@ def thinning_fn(positions: Array, size: int, memory_efficient: bool = False):
         )(X)
 
     def GramDistKernelElement(x: jnp.ndarray, Y: jnp.ndarray) -> jnp.ndarray:
-        """
-        Compute the kernel between a single point x and all points in Y.
-        """
+        """Compute the kernel between a single point x and all points in Y."""
         return jax.vmap(
             lambda y: jnp.sqrt(x @ x)
             + jnp.sqrt(y @ y)
@@ -139,7 +112,7 @@ def thinning_fn(positions: Array, size: int, memory_efficient: bool = False):
     obj = k0 - 2.0 * k0_mean
     init = jnp.argmin(obj)
 
-    def thinning_step_fn(carry, xs):
+    def thinning_step_fn(carry, _xs):
         idx, obj = carry
         ki = kmap(positions[idx], positions)
         obj = obj + 2.0 * ki - 2.0 * k0_mean

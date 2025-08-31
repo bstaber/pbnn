@@ -1,3 +1,4 @@
+"""Wrappers of Stochastic Gradient Langevin Dynamics (SGLD) algorithms."""
 # # This file is subject to the terms and conditions defined in
 # # file 'LICENSE.txt', which is part of this source code package.
 #
@@ -30,38 +31,21 @@ def sgld(
 ):
     """Wrapper of the SGLD algorithm implemented in BlackJAX.
 
-    Parameters
-    ----------
+    Args:
+        X: Matrix of input features of size (N, d)
+        y: Matrix of output features of size (N, s)
+        loglikelihood_fn: Callable log-likelihood function
+        logprior_fn: Callable log-prior function
+        init_positions: PyTree of initial positions
+        batch_size: Batch size for the stochastic gradient estimator
+        step_size: Step size
+        num_iterations: Total number of iterations
+        rng_key: Random seed key
 
-    X
-        Matrix of input features of size (N, d)
-    y
-        Matrix of output features of size (N, s)
-    loglikelihood_fn
-        Callable log-likelihood function
-    logprior_fn
-        Callable log-prior function
-    init_positions
-        PyTree of initial positions
-    batch_size
-        Batch size for the stochastic gradient estimator
-    step_size
-        Step size
-    num_iterations
-        Total number of iterations
-    rng_key
-        Random seed key
-
-    Returns
-    -------
-
-    positions
-        Markov chain given as a PyTree
-    ravel_fn
-        Ravel function to flatten the PyTree
-    predict_fn
-        Function to make predictions
-
+    Returns:
+        positions: Markov chain given as a PyTree
+        ravel_fn: Ravel function to flatten the PyTree
+        predict_fn: Function to make predictions
     """
     # batch data
     data_size = len(X)
@@ -108,40 +92,22 @@ def pSGLD(
 ):
     """Wrapper of the SGLD algorithm implemented in BlackJAX.
 
-    Parameters
-    ----------
+    Args:
+        X: Matrix of input features of size (N, d)
+        y: Matrix of output features of size (N, s)
+        loglikelihood_fn: Callable log-likelihood function
+        logprior_fn: Callable log-prior function
+        init_positions: PyTree of initial positions
+        batch_size: Batch size for the stochastic gradient estimator
+        step_size: Step size
+        num_iterations: Total number of iterations
+        preconditioning_factor: Preconditioning factor
+        rng_key: Random seed key
 
-    X
-        Matrix of input features of size (N, d)
-    y
-        Matrix of output features of size (N, s)
-    loglikelihood_fn
-        Callable log-likelihood function
-    logprior_fn
-        Callable log-prior function
-    init_positions
-        PyTree of initial positions
-    batch_size
-        Batch size for the stochastic gradient estimator
-    step_size
-        Step size
-    num_iterations
-        Total number of iterations
-    preconditiong_factor
-        Preconditioning factor
-    rng_key
-        Random seed key
-
-    Returns
-    -------
-
-    positions
-        Markov chain given as a PyTree
-    ravel_fn
-        Ravel function to flatten the PyTree
-    predict_fn
-        Function to make predictions
-
+    Returns:
+        positions: Markov chain given as a PyTree
+        ravel_fn: Ravel function to flatten the PyTree
+        predict_fn: Function to make predictions
     """
     # batch data
     data_size = len(X)
@@ -187,38 +153,21 @@ def scheduled_sgld(
 ):
     """Wrapper of the SGLD algorithm implemented in BlackJAX.
 
-    Parameters
-    ----------
+    Args:
+        X: Matrix of input features of size (N, d)
+        y: Matrix of output features of size (N, s)
+        loglikelihood_fn: Callable log-likelihood function
+        logprior_fn: Callable log-prior function
+        init_positions: PyTree of initial positions
+        batch_size: Batch size for the stochastic gradient estimator
+        schedule_fn: Callable function that returns the step size w.r.t the current iteration
+        num_iterations: Total number of iterations
+        rng_key: Random seed key
 
-    X
-        Matrix of input features of size (N, d)
-    y
-        Matrix of output features of size (N, s)
-    loglikelihood_fn
-        Callable log-likelihood function
-    logprior_fn
-        Callable log-prior function
-    init_positions
-        PyTree of initial positions
-    batch_size
-        Batch size for the stochastic gradient estimator
-    schedule_fn
-        Callable function that returns the step size w.r.t the current iteration
-    num_iterations
-        Total number of iterations
-    rng_key
-        Random seed key
-
-    Returns
-    -------
-
-    positions
-        Markov chain given as a PyTree
-    ravel_fn
-        Ravel function to flatten the PyTree
-    predict_fn
-        Function to make predictions
-
+    Returns:
+        positions: Markov chain given as a PyTree
+        ravel_fn: Ravel function to flatten the PyTree
+        predict_fn: Function to make predictions
     """
     # batch data
     data_size = len(X)
@@ -269,40 +218,22 @@ def sgld_cv(
 ):
     """Wrapper of the SGLD algorithm implemented in BlackJAX.
 
-    Parameters
-    ----------
+    Args:
+        X: Matrix of input features of size (N, d)
+        y: Matrix of output features of size (N, s)
+        loglikelihood_fn: Callable log-likelihood function
+        logprior_fn: Callable log-prior function
+        init_positions: PyTree of initial positions
+        batch_size: Batch size for the stochastic gradient estimator
+        step_size: Step size
+        num_iterations: Total number of iterations
+        centering_positions: PyTree of control variates
+        rng_key: Random seed key
 
-    X
-        Matrix of input features of size (N, d)
-    y
-        Matrix of output features of size (N, s)
-    loglikelihood_fn
-        Callable log-likelihood function
-    logprior_fn
-        Callable log-prior function
-    init_positions
-        PyTree of initial positions
-    batch_size
-        Batch size for the stochastic gradient estimator
-    step_size
-        Step size
-    num_iterations
-        Total number of iterations
-    centering_positions
-        PyTree of control variates
-    rng_key
-        Random seed key
-
-    Returns
-    -------
-
-    positions
-        Markov chain given as a PyTree
-    ravel_fn
-        Ravel function to flatten the PyTree
-    predict_fn
-        Function to make predictions
-
+    Returns:
+        positions: Markov chain given as a PyTree
+        ravel_fn: Ravel function to flatten the PyTree
+        predict_fn: Function to make predictions
     """
     # batch data
     data_size = len(X)
@@ -354,40 +285,23 @@ def sgld_svrg(
 ):
     """Wrapper of the SGLD algorithm implemented in BlackJAX.
 
-    Parameters
-    ----------
+    Args:
+        X: Matrix of input features of size (N, d)
+        y: Matrix of output features of size (N, s)
+        loglikelihood_fn: Callable log-likelihood function
+        logprior_fn: Callable log-prior function
+        init_positions: PyTree of initial positions
+        batch_size: Batch size for the stochastic gradient estimator
+        step_size: Step size
+        centering_positions: PyTree of control variates
+        num_cv_iterations: Number of control variates iterations
+        num_svrg_iterations: Number of SVRG outer iterations
+        rng_key: Random seed key
 
-    X
-        Matrix of input features of size (N, d)
-    y
-        Matrix of output features of size (N, s)
-    loglikelihood_fn
-        Callable log-likelihood function
-    logprior_fn
-        Callable log-prior function
-    init_positions
-        PyTree of initial positions
-    batch_size
-        Batch size for the stochastic gradient estimator
-    step_size
-        Step size
-    num_iterations
-        Total number of iterations
-    centering_positions
-        PyTree of control variates
-    rng_key
-        Random seed key
-
-    Returns
-    -------
-
-    positions
-        Markov chain given as a PyTree
-    ravel_fn
-        Ravel function to flatten the PyTree
-    predict_fn
-        Function to make predictions
-
+    Returns:
+        positions: Markov chain given as a PyTree
+        ravel_fn: Ravel function to flatten the PyTree
+        predict_fn: Function to make predictions
     """
     # batch data
     data_size = len(X)
@@ -461,6 +375,27 @@ def cyclical_sgld(
     num_sgld_steps: int = 20_000,
     burnin_sgld: int = 10_000,
 ):
+    """Cyclical Stochastic Gradient Langevin Dynamics (SGLD) algorithm.
+
+    Args:
+        X: Matrix of input features of size (N, d)
+        y: Matrix of output features of size (N, s)
+        loglikelihood_fn: Callable log-likelihood function
+        logprior_fn: Callable log-prior function
+        init_positions: PyTree of initial positions
+        batch_size: Batch size for the stochastic gradient estimator
+        step_size: Maximum step size
+        num_cycles: Number of cycles
+        rng_key: Random seed key
+        num_sgd_steps: Number of SGD steps per cycle (default: 1,000)
+        num_sgld_steps: Number of SGLD steps per cycle (default: 20,000)
+        burnin_sgld: Number of burn-in SGLD steps
+
+    Returns:
+        positions: Markov chain given as a PyTree
+        ravel_fn: Ravel function to flatten the PyTree
+        predict_fn: Function to make predictions
+    """
     data_size = len(X)
 
     sgd = optax.sgd(1)

@@ -1,3 +1,4 @@
+"""Preconditioned Stochastic Gradient Langevin Dynamics (pSGLD) kernel."""
 # # This file is subject to the terms and conditions defined in
 # # file 'LICENSE.txt', which is part of this source code package.
 #
@@ -22,9 +23,8 @@ class psgld:
     parameters at initialization time, we provide a helper function that
     specializes the general kernel.
 
-    Example
+    Example:
     -------
-
     To initialize a pSGLD kernel one needs to specify a schedule function, which
     returns a step size at each sampling step, and a gradient estimator
     function. Here for a constant step size, and `data_size` data samples:
@@ -68,7 +68,7 @@ class psgld:
     alpha
        A float corresponding to the exponential decay of the preconditioning matrix.
 
-    Returns
+    Returns:
     -------
     A ``SamplingAlgorithm``.
 
@@ -77,11 +77,12 @@ class psgld:
     init = staticmethod(sgmcmc.psgld.init)
     kernel = staticmethod(sgmcmc.psgld.kernel)
 
-    def __new__(  # type: ignore[misc]
+    def __new__(
         cls,
         grad_estimator_fn: Callable,
         alpha: float = 0.95,
     ) -> SamplingAlgorithm:
+        """Builds a ``SamplingAlgorithm`` for the pSGLD kernel."""
         step = cls.kernel(grad_estimator_fn)
 
         def init_fn(position: Array, data_batch: Array):

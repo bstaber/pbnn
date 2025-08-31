@@ -1,3 +1,4 @@
+"""Diffusion processes for SGMCMC algorithms."""
 # # This file is subject to the terms and conditions defined in
 # # file 'LICENSE.txt', which is part of this source code package.
 #
@@ -11,6 +12,8 @@ from blackjax.types import Array, PRNGKey
 
 
 class pSGLDState(NamedTuple):
+    """State of the pSGLD diffusion process."""
+
     position: Array
     logprob_grad: Array
     square_avg: Array
@@ -19,7 +22,7 @@ class pSGLDState(NamedTuple):
 def preconditioned_overdamped_langevin(logprob_grad_fn):
     """Euler solver for overdamped Langevin diffusion with preconditioning [0]_.
 
-        References
+    References:
     ----------
     .. [0]:  Li, C., Chen, C., Carlson, D., & Carin, L. (2016, February).
              Preconditioned stochastic gradient Langevin dynamics for deep neural networks.
