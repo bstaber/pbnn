@@ -1,3 +1,4 @@
+"""Hamiltonian-based MCMC sampling algorithms."""
 # # This file is subject to the terms and conditions defined in
 # # file 'LICENSE.txt', which is part of this source code package.
 #
@@ -6,7 +7,6 @@ from typing import Callable
 
 import blackjax
 import jax
-import jax.numpy as jnp
 from blackjax.sgmcmc.gradients import control_variates, grad_estimator
 from jax import Array
 from jax.flatten_util import ravel_pytree
@@ -15,7 +15,7 @@ from pbnn.utils.data import batch_labeled_data as batch_data
 
 
 def inference_loop(rng_key, step_fn, initial_state, num_samples):
-    """Inference loop with lax.scan"""
+    """Inference loop with lax.scan."""
 
     @jax.jit
     def one_step(state, rng_key):
@@ -90,39 +90,22 @@ def sghmc(
 ):
     """Wrapper of the SGHMC algorithm implemented in BlackJAX.
 
-    Parameters
-    ----------
-
-    X
-        Matrix of input features of size (N, d)
-    y
-        Matrix of output features of size (N, s)
-    loglikelihood_fn
-        Callable log-likelihood function
-    logprior_fn
-        Callable log-prior function
-    init_positions
-        PyTree of initial positions
-    batch_size
-        Batch size for the stochastic gradient estimator
-    step_size
-        Step size
-    num_iterations
-        Total number of iterations
-    num_integration_steps
-        Number of leapfrog steps
-    rng_key
-        Random seed key
+    Args:
+        X: Matrix of input features of size (N, d)
+        y: Matrix of output features of size (N, s)
+        loglikelihood_fn: Callable log-likelihood function
+        logprior_fn: Callable log-prior function
+        init_positions: PyTree of initial positions
+        batch_size: Batch size for the stochastic gradient estimator
+        step_size: Step size
+        num_iterations: Total number of iterations
+        num_integration_steps: Number of leapfrog steps
+        rng_key: Random seed key
 
     Returns:
-    -------
-    positions
-        Markov chain given as a PyTree
-    ravel_fn
-        Ravel function to flatten the PyTree
-    predict_fn
-        Function to make predictions
-
+        positions: Markov chain given as a PyTree
+        ravel_fn: Ravel function to flatten the PyTree
+        predict_fn: Function to make predictions
     """
     # batch data
     data_size = len(X)
@@ -170,39 +153,22 @@ def scheduled_sghmc(
 ):
     """Wrapper of the cyclical SGHMC algorithm implemented in BlackJAX.
 
-    Parameters
-    ----------
-
-    X
-        Matrix of input features of size (N, d)
-    y
-        Matrix of output features of size (N, s)
-    loglikelihood_fn
-        Callable log-likelihood function
-    logprior_fn
-        Callable log-prior function
-    init_positions
-        PyTree of initial positions
-    batch_size
-        Batch size for the stochastic gradient estimator
-    schedule_fn
-        Callable that gives the step size w.r.t the current iteration
-    num_iterations
-        Total number of iterations
-    num_integration_steps
-        Number of leapfrog steps
-    rng_key
-        Random seed key
+    Args:
+        X: Matrix of input features of size (N, d)
+        y: Matrix of output features of size (N, s)
+        loglikelihood_fn: Callable log-likelihood function
+        logprior_fn: Callable log-prior function
+        init_positions: PyTree of initial positions
+        batch_size: Batch size for the stochastic gradient estimator
+        schedule_fn: Callable that gives the step size w.r.t the current iteration
+        num_iterations: Total number of iterations
+        num_integration_steps: Number of leapfrog steps
+        rng_key: Random seed key
 
     Returns:
-    -------
-    positions
-        Markov chain given as a PyTree
-    ravel_fn
-        Ravel function to flatten the PyTree
-    predict_fn
-        Function to make predictions
-
+        positions: Markov chain given as a PyTree
+        ravel_fn: Ravel function to flatten the PyTree
+        predict_fn: Function to make predictions
     """
     # batch data
     data_size = len(X)
@@ -252,41 +218,23 @@ def sghmc_cv(
 ):
     """SGHMC-CV algorithm implemented by relying on BlackJAX.
 
-    Parameters
-    ----------
-
-    X
-        Matrix of input features of size (N, d)
-    y
-        Matrix of output features of size (N, s)
-    loglikelihood_fn
-        Callable log-likelihood function
-    logprior_fn
-        Callable log-prior function
-    init_positions
-        PyTree of initial positions
-    batch_size
-        Batch size for the stochastic gradient estimator
-    step_size
-        Step size
-    num_iterations
-        Total number of iterations
-    centering_positions
-        PyTree of control variates
-    num_integration_steps
-        Number of leapfrog steps
-    rng_key
-        Random seed key
+    Args:
+        X: Matrix of input features of size (N, d)
+        y: Matrix of output features of size (N, s)
+        loglikelihood_fn: Callable log-likelihood function
+        logprior_fn: Callable log-prior function
+        init_positions: PyTree of initial positions
+        batch_size: Batch size for the stochastic gradient estimator
+        step_size: Step size
+        num_iterations: Total number of iterations
+        centering_positions: PyTree of control variates
+        num_integration_steps: Number of leapfrog steps
+        rng_key: Random seed key
 
     Returns:
-    -------
-    positions
-        Markov chain given as a PyTree
-    ravel_fn
-        Ravel function to flatten the PyTree
-    predict_fn
-        Function to make predictions
-
+        positions: Markov chain given as a PyTree
+        ravel_fn: Ravel function to flatten the PyTree
+        predict_fn: Function to make predictions
     """
     # batch data
     data_size = len(X)
@@ -340,39 +288,24 @@ def sghmc_svrg(
 ):
     """SGHMC-SVRG algorithm implemented using BlackJAX.
 
-    Parameters
-    ----------
-
-    X
-        Matrix of input features of size (N, d)
-    y
-        Matrix of output features of size (N, s)
-    loglikelihood_fn
-        Callable log-likelihood function
-    logprior_fn
-        Callable log-prior function
-    init_positions
-        PyTree of initial positions
-    batch_size
-        Batch size for the stochastic gradient estimator
-    step_size
-        Step size
-    num_iterations
-        Total number of iterations
-    centering_positions
-        PyTree of control variates
-    rng_key
-        Random seed key
+    Args:
+        X: Matrix of input features of size (N, d)
+        y: Matrix of output features of size (N, s)
+        loglikelihood_fn: Callable log-likelihood function
+        logprior_fn: Callable log-prior function
+        init_positions: PyTree of initial positions
+        batch_size: Batch size for the stochastic gradient estimator
+        step_size: Step size
+        centering_positions: PyTree of control variates
+        num_cv_iterations: Number of inner control variate iterations
+        num_svrg_iterations: Number of outer SVRG iterations
+        num_integration_steps: Number of leapfrog steps
+        rng_key: Random seed key
 
     Returns:
-    -------
-    positions
-        Markov chain given as a PyTree
-    ravel_fn
-        Ravel function to flatten the PyTree
-    predict_fn
-        Function to make predictions
-
+        positions: Markov chain given as a PyTree
+        ravel_fn: Ravel function to flatten the PyTree
+        predict_fn: Function to make predictions
     """
     # batch data
     data_size = len(X)

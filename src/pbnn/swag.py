@@ -23,7 +23,6 @@ class SWAGState(NamedTuple):
         num_models: int
         mean: flax.core.FrozenDict
         som: flax.core.FrozenDict
-
     """
 
     num_models: int
