@@ -7,9 +7,10 @@ from typing import Callable
 import blackjax
 import jax
 import jax.numpy as jnp
-from blackjax.sgmcmc.gradients import grad_estimator, control_variates
+from blackjax.sgmcmc.gradients import control_variates, grad_estimator
 from jax import Array
 from jax.flatten_util import ravel_pytree
+
 from pbnn.utils.data import batch_labeled_data as batch_data
 
 
@@ -55,12 +56,10 @@ def hmc(
     rng_key
         A JAX PRNGKey.
 
-    Returns
+    Returns:
     -------
-
     A tuple of states and informations
     """
-
     kern = blackjax.hmc(
         logprob_fn, step_size, inverse_mass_matrix, num_integration_steps
     )
@@ -115,9 +114,8 @@ def sghmc(
     rng_key
         Random seed key
 
-    Returns
+    Returns:
     -------
-
     positions
         Markov chain given as a PyTree
     ravel_fn
@@ -126,7 +124,6 @@ def sghmc(
         Function to make predictions
 
     """
-
     # batch data
     data_size = len(X)
     batches = batch_data(rng_key, (X, y), batch_size, data_size, replace=True)
@@ -197,9 +194,8 @@ def scheduled_sghmc(
     rng_key
         Random seed key
 
-    Returns
+    Returns:
     -------
-
     positions
         Markov chain given as a PyTree
     ravel_fn
@@ -282,9 +278,8 @@ def sghmc_cv(
     rng_key
         Random seed key
 
-    Returns
+    Returns:
     -------
-
     positions
         Markov chain given as a PyTree
     ravel_fn
@@ -369,9 +364,8 @@ def sghmc_svrg(
     rng_key
         Random seed key
 
-    Returns
+    Returns:
     -------
-
     positions
         Markov chain given as a PyTree
     ravel_fn

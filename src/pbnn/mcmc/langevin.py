@@ -52,9 +52,8 @@ def sgld(
     rng_key
         Random seed key
 
-    Returns
+    Returns:
     -------
-
     positions
         Markov chain given as a PyTree
     ravel_fn
@@ -132,9 +131,8 @@ def pSGLD(
     rng_key
         Random seed key
 
-    Returns
+    Returns:
     -------
-
     positions
         Markov chain given as a PyTree
     ravel_fn
@@ -209,9 +207,8 @@ def scheduled_sgld(
     rng_key
         Random seed key
 
-    Returns
+    Returns:
     -------
-
     positions
         Markov chain given as a PyTree
     ravel_fn
@@ -293,9 +290,8 @@ def sgld_cv(
     rng_key
         Random seed key
 
-    Returns
+    Returns:
     -------
-
     positions
         Markov chain given as a PyTree
     ravel_fn
@@ -378,9 +374,8 @@ def sgld_svrg(
     rng_key
         Random seed key
 
-    Returns
+    Returns:
     -------
-
     positions
         Markov chain given as a PyTree
     ravel_fn

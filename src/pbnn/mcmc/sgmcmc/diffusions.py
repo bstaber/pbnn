@@ -19,7 +19,7 @@ class pSGLDState(NamedTuple):
 def preconditioned_overdamped_langevin(logprob_grad_fn):
     """Euler solver for overdamped Langevin diffusion with preconditioning [0]_.
 
-        References
+    References:
     ----------
     .. [0]:  Li, C., Chen, C., Carlson, D., & Carin, L. (2016, February).
              Preconditioned stochastic gradient Langevin dynamics for deep neural networks.

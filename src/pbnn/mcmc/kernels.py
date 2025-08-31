@@ -22,9 +22,8 @@ class psgld:
     parameters at initialization time, we provide a helper function that
     specializes the general kernel.
 
-    Example
+    Example:
     -------
-
     To initialize a pSGLD kernel one needs to specify a schedule function, which
     returns a step size at each sampling step, and a gradient estimator
     function. Here for a constant step size, and `data_size` data samples:
@@ -68,7 +67,7 @@ class psgld:
     alpha
        A float corresponding to the exponential decay of the preconditioning matrix.
 
-    Returns
+    Returns:
     -------
     A ``SamplingAlgorithm``.
 

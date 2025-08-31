@@ -3,13 +3,14 @@
 #
 
 """Public API for the Preconditioned Stochastic gradient Langevin Dynamics kernel."""
-import jax
-import jax.numpy as jnp
 
 from typing import Callable, NamedTuple
 
+import jax
+import jax.numpy as jnp
+from blackjax.types import Array, PRNGKey
+
 from pbnn.mcmc.sgmcmc.diffusions import preconditioned_overdamped_langevin
-from blackjax.types import PRNGKey, Array
 
 __all__ = ["init", "kernel"]
 

@@ -26,9 +26,8 @@ def create_train_state(rng, flax_module, init_input, learning_rate):
     learning_rate
         Step size
 
-    Returns
+    Returns:
     -------
-
     An initial train state
 
     """
@@ -54,9 +53,8 @@ def build_logposterior_estimator_fn(
     data_size
         Dataset size
 
-    Returns
+    Returns:
     -------
-
     Callable logposterior function
 
     """
@@ -85,9 +83,8 @@ def thinning_fn(positions: Array, size: int, memory_efficient: bool = False):
     memory_efficient
         Whether to use a memory-efficient implementation (default: False)
 
-    Returns
+    Returns:
     -------
-
     Array of indices corresponding to the selected particles
 
     """
@@ -109,9 +106,7 @@ def thinning_fn(positions: Array, size: int, memory_efficient: bool = False):
         )(X)
 
     def GramDistKernelElement(x: jnp.ndarray, Y: jnp.ndarray) -> jnp.ndarray:
-        """
-        Compute the kernel between a single point x and all points in Y.
-        """
+        """Compute the kernel between a single point x and all points in Y."""
         return jax.vmap(
             lambda y: jnp.sqrt(x @ x)
             + jnp.sqrt(y @ y)

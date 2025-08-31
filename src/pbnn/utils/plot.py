@@ -2,7 +2,6 @@
 # # file 'LICENSE.txt', which is part of this source code package.
 #
 
-import shutil
 
 import jax.numpy as jnp
 import matplotlib.pyplot as plt
@@ -42,13 +41,11 @@ def plot_interval(
     use_tex
         Use LaTeX for rendering
 
-    Returns
+    Returns:
     -------
-
     Figure handle.
 
     """
-
     mpl_options = {
         "font.family": "sans-serif",
         "font.sans-serif": "Helvetica",

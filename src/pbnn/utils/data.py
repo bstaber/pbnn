@@ -26,9 +26,8 @@ def batch_unlabeled_data(rng_key, data, batch_size, data_size, replace=True):
     replace
         Sample with replacement (default: True)
 
-    Returns
+    Returns:
     -------
-
     Generator yielding batches of data
 
     """
@@ -61,9 +60,8 @@ def batch_labeled_data(rng_key, data, batch_size, data_size, replace=True):
     replace
         Sample with replacement (default: True)
 
-    Returns
+    Returns:
     -------
-
     Generator yielding batches of data
 
     """

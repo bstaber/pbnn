@@ -2,7 +2,7 @@
 # # file 'LICENSE.txt', which is part of this source code package.
 #
 
-from .hamiltonian import scheduled_sghmc, sghmc, sghmc_cv, sghmc_svrg, hmc
+from .hamiltonian import hmc, scheduled_sghmc, sghmc, sghmc_cv, sghmc_svrg
 from .langevin import cyclical_sgld, pSGLD, scheduled_sgld, sgld, sgld_cv, sgld_svrg
 
 __all__ = [

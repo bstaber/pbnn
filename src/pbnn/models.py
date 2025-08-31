@@ -2,10 +2,7 @@
 # # file 'LICENSE.txt', which is part of this source code package.
 #
 
-import jax.numpy as jnp
-import jax.scipy.stats as stats
 from flax import linen as nn
-from jax.flatten_util import ravel_pytree
 
 
 class MLP(nn.Module):
