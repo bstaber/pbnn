@@ -3,17 +3,16 @@ from time import time
 
 import numpy as np
 import torch
-import torch.nn as nn
-import torch.optim as optim
 from absl import app, flags
 from experiments import load_experiment
+from hetreg.marglik import marglik_optimization
+from laplace import KronLaplace
+
 # from laplace import Laplace
 # from laplace.curvature.backpack import BackPackGGN
 from laplace.curvature.asdl import AsdlGGN
-from laplace import KronLaplace
 from rich.progress import track
 from torch.utils.data import DataLoader, TensorDataset
-from hetreg.marglik import marglik_optimization
 
 FLAGS = flags.FLAGS
 flags.DEFINE_string("workdir", default=".", help="Directory where data will be stored")
@@ -53,13 +52,11 @@ def setup_directories(workdir, seed, experiment, step_size):
 
 
 def main(argv):
-    """
-    Main function to train a model, fit a Laplace approximation, and save results.
+    """Main function to train a model, fit a Laplace approximation, and save results.
 
     Args:
         argv (list): Command line arguments.
     """
-
     workdir = FLAGS.workdir
     step_size = FLAGS.step_size
     num_datasets = FLAGS.num_datasets
@@ -88,7 +85,7 @@ def main(argv):
         )
 
         t_initial = time()
-        
+
         lr = step_size
         lr_min = 1e-5
         lr_hyp = 1e-1
@@ -97,17 +94,18 @@ def main(argv):
         n_epochs = 10000
         n_hypersteps = 50
         marglik_frequency = 50
-        laplace = KronLaplace 
-        optimizer = 'Adam'
+        laplace = KronLaplace
+        optimizer = "Adam"
         backend = AsdlGGN
         n_epochs_burnin = 100
         prior_prec_init = 1e-3
-        
+
         la, model, margliksh, _, _ = marglik_optimization(
-            model, 
-            train_loader, 
-            likelihood='heteroscedastic_regression', 
-            lr=lr, lr_min=lr_min,
+            model,
+            train_loader,
+            likelihood="heteroscedastic_regression",
+            lr=lr,
+            lr_min=lr_min,
             lr_hyp=lr_hyp,
             early_stopping=marglik_early_stopping,
             lr_hyp_min=lr_hyp_min,
@@ -115,22 +113,22 @@ def main(argv):
             n_hypersteps=n_hypersteps,
             marglik_frequency=marglik_frequency,
             laplace=laplace,
-            prior_structure='layerwise',
+            prior_structure="layerwise",
             backend=backend,
             n_epochs_burnin=n_epochs_burnin,
-            scheduler='cos',
+            scheduler="cos",
             optimizer=optimizer,
             prior_prec_init=prior_prec_init,
-            use_wandb=False
+            use_wandb=False,
         )
-                
+
         t_final = time()
 
         X_test = torch.tensor(np.array(X_test), dtype=torch.float32)
         f_mu, f_var, y_var = la(X_test)
-        
+
         positions = la.sample(n_samples=2000).detach().cpu().numpy()
-        
+
         predictions = la.predictive_samples(X_test, n_samples=2000)
 
         np.savez(

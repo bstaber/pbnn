@@ -127,15 +127,15 @@ if __name__ == "__main__":
         params_hmc += [data_hmc["positions"][chain][100:]]
     preds_hmc = np.concatenate(preds_hmc, axis=0).squeeze()
     params_hmc = np.concatenate(params_hmc, axis=0).squeeze()
-    
+
     if preds_hmc.ndim == 3:
         preds_hmc = preds_hmc[:, :, 0]
-        
+
     for i, (ikey, ival) in tqdm(enumerate(samples.items())):
         data_i = jnp.load(ival)
         x_params = jnp.array(data_i["positions"], dtype=jnp.float64)
         x_preds = jnp.array(data_i["predictions"].squeeze(), dtype=jnp.float64)
-        
+
         if x_preds.ndim == 3:
             x_preds = x_preds[:, :, 0]
 

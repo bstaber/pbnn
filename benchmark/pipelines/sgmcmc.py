@@ -5,12 +5,13 @@ from time import time
 import jax
 import jax.numpy as jnp
 import jax.random as jr
-import pbnn.mcmc as mcmc
 from absl import app, flags, logging
 from experiments import load_experiment
 from logprobs import logprior_fn
-from pbnn.utils.misc import thinning_fn
 from rich.progress import track
+
+import pbnn.mcmc as mcmc
+from pbnn.utils.misc import thinning_fn
 
 FLAGS = flags.FLAGS
 flags.DEFINE_string("workdir", default=".", help="Directory where data will be stored")
@@ -31,7 +32,9 @@ flags.DEFINE_float("step_size", 1e-8, "Step size of the algorithm")
 flags.DEFINE_integer(
     "seed", default=0, help="Initial seed that will be split accross the functions"
 )
-flags.DEFINE_string("init_method", default="map", help="Initialization method for MCMC.")
+flags.DEFINE_string(
+    "init_method", default="map", help="Initialization method for MCMC."
+)
 
 
 def setup_directories(workdir, seed, experiment, algorithm, step_size):
@@ -47,7 +50,11 @@ def setup_directories(workdir, seed, experiment, algorithm, step_size):
 
     WORKDIR = Path(workdir)
     ROOT = (
-        WORKDIR / f"seed_{seed}" / experiment.name / algorithm.__name__ / f"lr_{step_size}"
+        WORKDIR
+        / f"seed_{seed}"
+        / experiment.name
+        / algorithm.__name__
+        / f"lr_{step_size}"
     )
     INIT_PARAMS_DIR = WORKDIR / f"seed_{seed}" / experiment.name / "init_params"
 
@@ -56,13 +63,11 @@ def setup_directories(workdir, seed, experiment, algorithm, step_size):
 
 
 def main(argv):
-    """
-    Main function for running SGMCMC algorithms and save results.
+    """Main function for running SGMCMC algorithms and save results.
 
     Args:
         argv (list): Command line arguments.
     """
-
     logging.info("JAX process: %d / %d", jax.process_index(), jax.process_count())
     logging.info("JAX local devices: %r", jax.local_devices())
 
@@ -96,13 +101,11 @@ def main(argv):
         rng_key
             PRNGKey
 
-        Returns
+        Returns:
         -------
-
         Markov Chain of positions with burnin already removed
 
         """
-
         match algorithm.__name__:
             case "sgld":
                 hparams = {"num_iterations": 100_00}

@@ -23,19 +23,19 @@ author = "Safran Group"
 release = "0.0.1"
 
 extensions = [
-    'sphinx.ext.autodoc',
-    'sphinx.ext.viewcode',
-    'sphinx.ext.todo',
-    'sphinx.ext.intersphinx',
-    'sphinx.ext.doctest',
-    'sphinx.ext.ifconfig',
-    'sphinx.ext.duration',
-    'sphinx.ext.extlinks',
-    'sphinx.ext.napoleon',
-    'myst_nb',
+    "sphinx.ext.autodoc",
+    "sphinx.ext.viewcode",
+    "sphinx.ext.todo",
+    "sphinx.ext.intersphinx",
+    "sphinx.ext.doctest",
+    "sphinx.ext.ifconfig",
+    "sphinx.ext.duration",
+    "sphinx.ext.extlinks",
+    "sphinx.ext.napoleon",
+    "myst_nb",
     # 'myst_parser', # imported by myst_nb
     # 'sphinxcontrib.apidoc', # autoapi is better
-    'sphinx.ext.autosummary',
+    "sphinx.ext.autosummary",
     # 'sphinxcontrib.bibtex'
 ]
 
@@ -56,10 +56,10 @@ extensions = [
 # graphviz_output_format = 'svg'
 # myst_parser options
 source_suffix = {
-    '.rst': 'restructuredtext',
-    '.ipynb': 'myst-nb',
-    '.myst': 'myst-nb',
-    '.md': 'myst-nb',
+    ".rst": "restructuredtext",
+    ".ipynb": "myst-nb",
+    ".myst": "myst-nb",
+    ".md": "myst-nb",
 }
 myst_enable_extensions = [
     "amsmath",
@@ -99,7 +99,7 @@ html_theme_options = {
     "source_directory": "doc/",
 }
 
-github_url = 'https://gitlab.com/drti/pbnn'
+github_url = "https://gitlab.com/drti/pbnn"
 
 autodoc_mock_imports = ["jax"]
 autodoc_member_order = "bysource"

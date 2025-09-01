@@ -50,13 +50,11 @@ def train_model(model, train_loader, optimizer, loss_fn, num_epochs=1000):
 
 
 def main(argv):
-    """
-    Main function to train a model, fit a Laplace approximation, and save results.
+    """Main function to train a model, fit a Laplace approximation, and save results.
 
     Args:
         argv (list): Command line arguments.
     """
-
     workdir = FLAGS.workdir
     step_size = FLAGS.step_size
     num_datasets = FLAGS.num_datasets

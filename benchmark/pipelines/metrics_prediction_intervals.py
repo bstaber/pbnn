@@ -3,7 +3,6 @@ from pathlib import Path
 
 import jax.numpy as jnp
 import numpy as np
-import numpy as np
 import scipy.stats as stats
 from experiments import Experiment, load_experiment
 from tqdm import tqdm
@@ -31,12 +30,14 @@ def compute_interval_metrics(alphas, data, algorithm, y_test):
 
             inside_dim = (y_test - qhigh[:, None] < 0) * (y_test - qlow[:, None] > 0)
             inside.append(inside_dim)
-            
+
             widths_per_alpha.append(np.mean(qhigh - qlow))
     else:
         # get predictions
         f_predictions = data["predictions"]
-        y_predictions = f_predictions + noise_level * np.random.randn(*f_predictions.shape)
+        y_predictions = f_predictions + noise_level * np.random.randn(
+            *f_predictions.shape
+        )
 
         # compute coverage probabilities
         inside = []
@@ -71,12 +72,14 @@ def compute_interval_metrics_heteroscedastic(alphas, data, algorithm, y_test):
 
             inside_dim = (y_test - qhigh[:, None] < 0) * (y_test - qlow[:, None] > 0)
             inside.append(inside_dim)
-            
+
             widths_per_alpha.append(np.mean(qhigh - qlow))
     else:
         # get predictions
         f_predictions = data["predictions"]
-        y_predictions = f_predictions[:, :, 0] + noise_level * f_predictions[:, :, 1] * np.random.randn(*f_predictions[:, :, 0].shape)
+        y_predictions = f_predictions[:, :, 0] + noise_level * f_predictions[
+            :, :, 1
+        ] * np.random.randn(*f_predictions[:, :, 0].shape)
 
         # compute coverage probabilities
         inside = []
@@ -95,8 +98,7 @@ def compute_interval_metrics_heteroscedastic(alphas, data, algorithm, y_test):
 
 
 def compute_regression_metrics(y_true, y_pred):
-    """
-    Args:
+    """Args:
         y_true (np.ndarray)
         y_pred (np.ndarray)
 
@@ -114,8 +116,7 @@ def compute_regression_metrics(y_true, y_pred):
 
 
 def compute_coverage_probabilities(alphas: np.ndarray, inside_list: np.ndarray):
-    """
-    Args:
+    """Args:
         alphas (np.ndarray): Array of confidence levels
         inside_list (np.ndarray): Array of bools such that True means that the points falls into the interval. Shape: [#_datasets, #_alphas, #_xtest, #_ytest_per_xtest]
 
@@ -136,8 +137,7 @@ def compute_coverage_probabilities(alphas: np.ndarray, inside_list: np.ndarray):
 
 
 def post_process_data(experiment: Experiment, files: list, algorithm: str):
-    """
-    Post-processes benchmark data to compute coverage probabilities, RMSE, Q2 scores, and other metrics.
+    """Post-processes benchmark data to compute coverage probabilities, RMSE, Q2 scores, and other metrics.
 
     Parameters:
     - experiment (Experiment): An instance of the Experiment class with a method to load data.
@@ -152,7 +152,6 @@ def post_process_data(experiment: Experiment, files: list, algorithm: str):
     - widths (np.ndarray): Average width of confidence intervals for each dataset.
     - times (np.ndarray): Computational time for each dataset.
     """
-
     inside_list = []
     widths_list = []
     q2_scores = []
@@ -177,8 +176,10 @@ def post_process_data(experiment: Experiment, files: list, algorithm: str):
 
             # compute is_inside arrays
             alphas = np.linspace(0.05, 0.95, 19)
-            inside_per_alpha, widths_per_alpha = compute_interval_metrics_heteroscedastic(
-                alphas, data, algorithm, y_test
+            inside_per_alpha, widths_per_alpha = (
+                compute_interval_metrics_heteroscedastic(
+                    alphas, data, algorithm, y_test
+                )
             )
         else:
             # mean prediction

@@ -147,7 +147,7 @@ def compute_discrepancies(
 
     for j, file in tqdm(enumerate(files)):
         dataset_idx = int(str(file).split("_")[-1].split(".")[0])
-        X_train, _, y_train, _, _, _= load_data_fn(dataset_idx=dataset_idx)
+        X_train, _, y_train, _, _, _ = load_data_fn(dataset_idx=dataset_idx)
         X_train, y_train = jnp.array(X_train), jnp.array(y_train)
 
         score_fn = jax.jit(jax.grad(logprob_fn, argnums=0))

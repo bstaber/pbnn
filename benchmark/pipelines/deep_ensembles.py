@@ -52,13 +52,11 @@ def setup_directories(workdir, seed, experiment, step_size):
 
 
 def main(argv):
-    """
-    Main function to train deep ensembles and save results.
+    """Main function to train deep ensembles and save results.
 
     Args:
         argv (list): Command line arguments.
     """
-    
     logging.info("JAX process: %d / %d", jax.process_index(), jax.process_count())
     logging.info("JAX local devices: %r", jax.local_devices())
 

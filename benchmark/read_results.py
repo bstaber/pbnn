@@ -7,8 +7,7 @@ import plotly.graph_objects as go
 
 
 def load_all_results_with_hparam_names(base_path, seed, test_case, algorithm):
-    """
-    Automatically load all results for a given algorithm and seed, storing the data in a dict
+    """Automatically load all results for a given algorithm and seed, storing the data in a dict
     where keys are dicts containing hyperparameters names and values, and the values are the loaded data.
 
     Parameters:
@@ -61,8 +60,7 @@ def load_all_results_with_hparam_names(base_path, seed, test_case, algorithm):
 
 
 def aggregate_metrics_with_shapes(base_path, test_case, algorithm):
-    """
-    Aggregates metrics across seeds and handles shape mismatches by padding shorter arrays.
+    """Aggregates metrics across seeds and handles shape mismatches by padding shorter arrays.
 
     Parameters:
     - base_path: str, base directory containing results.
@@ -208,7 +206,9 @@ if __name__ == "__main__":
         print(
             f"Hyperparameters: {dict(hparams)}"
         )  # Convert frozenset back to dict for readability
-        print(f"Metrics: {np.mean(data['q2_scores'])}")  # Replace 'metrics' with the actual key in your npz file
+        print(
+            f"Metrics: {np.mean(data['q2_scores'])}"
+        )  # Replace 'metrics' with the actual key in your npz file
         # print(data["mcp"])
 
     # # Example usage

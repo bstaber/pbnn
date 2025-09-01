@@ -31,7 +31,6 @@ def estimate_lengthscale(experiment: str, filenames: list, n: int = 1000):
     """Estimates the median heuristic with a subsample of the whole available data.
     It returns the median heuristics that should be used for computing KSD and SKSD.
     """
-
     bins = [0]
     repeated_filenames = []
     idx_map = []

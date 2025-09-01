@@ -4,7 +4,6 @@ import sys
 
 import numpy as np
 from rich.console import Console
-
 from utils import launch
 
 sys.path.append("pipelines")
@@ -37,13 +36,13 @@ if __name__ == "__main__":
     for step_size in step_sizes:
         params["step_size"] = step_size
         launch(template_name="conformal", **params)
-        
+
     params = common_params.copy()
     params["algorithm"] = "cv_plus"
     for step_size in step_sizes:
         params["step_size"] = step_size
         launch(template_name="conformal", **params)
-        
+
     params = common_params.copy()
     params["algorithm"] = "split_cqr"
     for step_size in step_sizes:
